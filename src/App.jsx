@@ -34,6 +34,7 @@ import ContestSubmissions from './pages/faculty/ContestSubmissions'
 import Profile from './pages/faculty/Profile'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 
 
 function App() {
@@ -88,6 +89,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100">
       <ToastContainer />
+      <Toaster position="top-right" />
       {!isProblemSolvingPage && renderHeader()}
       <main className={isProblemSolvingPage ? '' : 'container mx-auto p-6'}>
         <Routes>

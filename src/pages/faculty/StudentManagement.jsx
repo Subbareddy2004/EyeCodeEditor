@@ -1,7 +1,7 @@
 // client/src/pages/faculty/StudentManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { FaUpload, FaDownload, FaUserGraduate, FaPlus, FaTimes } from 'react-icons/fa';
-import { importStudents, getStudents, addStudent } from '../../services/studentService';
+import { FaUpload, FaDownload, FaUserGraduate, FaPlus, FaTimes, FaEdit, FaTrash } from 'react-icons/fa';
+import { importStudents, getStudents, addStudent, deleteStudent, updateStudent } from '../../services/studentService';
 import { toast } from 'react-toastify';
 
 const StudentManagement = () => {
@@ -14,6 +14,8 @@ const StudentManagement = () => {
     email: '',
     regNumber: ''
   });
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -82,6 +84,35 @@ const StudentManagement = () => {
     a.download = 'student_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleEditStudent = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await updateStudent(editingStudent._id, editingStudent);
+      toast.success('Student updated successfully');
+      setStudents(students.map(s => 
+        s._id === editingStudent._id ? result.student : s
+      ));
+      setShowEditForm(false);
+      setEditingStudent(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update student');
+    }
+  };
+
+  const handleDeleteStudent = async (studentId) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) {
+      return;
+    }
+
+    try {
+      await deleteStudent(studentId);
+      toast.success('Student deleted successfully');
+      setStudents(students.filter(s => s._id !== studentId));
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete student');
+    }
   };
 
   return (
@@ -184,6 +215,88 @@ const StudentManagement = () => {
         </div>
       )}
 
+      {/* Edit Student Modal */}
+      {showEditForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Edit Student</h2>
+              <button onClick={() => {
+                setShowEditForm(false);
+                setEditingStudent(null);
+              }} className="text-gray-500 hover:text-gray-700">
+                <FaTimes />
+              </button>
+            </div>
+            <form onSubmit={handleEditStudent}>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={editingStudent?.name || ''}
+                  onChange={(e) => setEditingStudent({
+                    ...editingStudent,
+                    name: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={editingStudent?.email || ''}
+                  onChange={(e) => setEditingStudent({
+                    ...editingStudent,
+                    email: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Registration Number
+                </label>
+                <input
+                  type="text"
+                  value={editingStudent?.regNumber || ''}
+                  onChange={(e) => setEditingStudent({
+                    ...editingStudent,
+                    regNumber: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditingStudent(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+                >
+                  Update Student
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div>Loading...</div>
       ) : (
@@ -199,6 +312,9 @@ const StudentManagement = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Registration Number
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -218,6 +334,25 @@ const StudentManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {student.regNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setEditingStudent(student);
+                          setShowEditForm(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student._id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -48,3 +48,30 @@ export const importStudents = async (formData) => {
     throw error;
   }
 };
+
+export const deleteStudent = async (studentId) => {
+  try {
+    const response = await axios.delete(
+      `${API_URL}/faculty/students/${studentId}`,
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting student:', error);
+    throw error;
+  }
+};
+
+export const updateStudent = async (studentId, studentData) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/faculty/students/${studentId}`,
+      studentData,
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error updating student:', error);
+    throw error;
+  }
+};
