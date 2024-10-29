@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createProblem } from '../../services/problems';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getProblem, updateProblem } from '../../services/problems';
 
-const ProblemCreation = ({ user }) => {
+const ProblemEdit = ({ user }) => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [problem, setProblem] = useState({
     title: '',
@@ -12,12 +13,28 @@ const ProblemCreation = ({ user }) => {
     sampleOutput: '',
     testCases: [{ input: '', output: '' }]
   });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadProblem();
+  }, [id]);
+
+  const loadProblem = async () => {
+    try {
+      const data = await getProblem(id);
+      setProblem(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createProblem(problem);
+      await updateProblem(id, problem);
       navigate('/faculty/problems');
     } catch (err) {
       setError(err.message);
@@ -42,11 +59,13 @@ const ProblemCreation = ({ user }) => {
     setProblem({ ...problem, testCases: newTestCases });
   };
 
+  if (loading) return <div>Loading...</div>;
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Create New Problem</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Edit Problem</h1>
           <button
             onClick={() => navigate('/faculty/problems')}
             className="text-gray-600 hover:text-gray-800"
@@ -54,7 +73,7 @@ const ProblemCreation = ({ user }) => {
             Back to Problems
           </button>
         </div>
-
+        
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -62,7 +81,6 @@ const ProblemCreation = ({ user }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title and Difficulty */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
@@ -74,6 +92,7 @@ const ProblemCreation = ({ user }) => {
                 required
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
               <select
@@ -88,7 +107,6 @@ const ProblemCreation = ({ user }) => {
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
@@ -100,7 +118,6 @@ const ProblemCreation = ({ user }) => {
             />
           </div>
 
-          {/* Sample Input/Output */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sample Input</label>
@@ -111,6 +128,7 @@ const ProblemCreation = ({ user }) => {
                 rows="4"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sample Output</label>
               <textarea
@@ -122,7 +140,6 @@ const ProblemCreation = ({ user }) => {
             </div>
           </div>
 
-          {/* Test Cases */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-4">Test Cases</label>
             {problem.testCases.map((testCase, index) => (
@@ -163,7 +180,6 @@ const ProblemCreation = ({ user }) => {
             </button>
           </div>
 
-          {/* Submit Buttons */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"
@@ -176,7 +192,7 @@ const ProblemCreation = ({ user }) => {
               type="submit"
               className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
             >
-              Create Problem
+              Update Problem
             </button>
           </div>
         </form>
@@ -185,4 +201,4 @@ const ProblemCreation = ({ user }) => {
   );
 };
 
-export default ProblemCreation;
+export default ProblemEdit;

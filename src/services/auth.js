@@ -1,84 +1,84 @@
-import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const API_URL = 'http://localhost:5000/api';
+export const registerUser = async (userData) => {
+  try {
+    console.log('Sending registration data:', userData);
 
-export const loginUser = async (email, password) => {
-  // Fake users for demonstration purposes
-  const fakeUsers = {
-    student: {
-      id: '123456',
-      name: 'Subbareddy',
-      email: '1234@gmail.com',
-      role: 'student'
-    },
-    faculty: {
-      id: '789012',
-      name: 'Demo Faculty',
-      email: 'faculty@example.com',
-      role: 'faculty'
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+    console.log('Registration response:', data);
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Registration failed');
     }
-  };
 
-  // Check if the entered credentials match any of the fake users
-  let user;
-  if (email === '1234@gmail.com' && password === '1234') {
-    user = fakeUsers.student;
-  } else if (email === 'raja@gmail.com' && password === 'raja') {
-    user = fakeUsers.faculty;
-  }
-
-  if (user) {
-    // Simulate an API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Return a fake token and user data
+    localStorage.setItem('token', data.token);
     return {
-      token: 'fake-jwt-token-' + user.role,
-      user: user
+      user: data.user,
+      token: data.token
     };
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
   }
-
-  // If credentials don't match, throw an error
-  throw new Error('Invalid credentials');
 };
 
-export const registerUser = async (name, email, password, role) => {
+export const loginUser = async (email, password) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/register`, { name, email, password, role });
-    return response.data;
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    console.log('Login response data:', data); // Debug log
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
+    }
+
+    if (!data.user || !data.token) {
+      throw new Error('Invalid response format');
+    }
+
+    return {
+      user: data.user,
+      token: data.token
+    };
   } catch (error) {
-    throw error.response.data;
+    console.error('Login error:', error);
+    throw error;
   }
 };
 
 export const getUserProfile = async () => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return null;
-  }
   try {
-    const response = await fetch('http://localhost:5000/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    if (response.status === 401) {
-      localStorage.removeItem('token');
-      return null;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No token found');
     }
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.indexOf("application/json") !== -1) {
-      return await response.json();
-    } else {
-      throw new Error("Oops, we haven't got JSON!");
-    }
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return {
+      id: payload.id,
+      _id: payload.id, // Add this line to ensure compatibility
+      email: payload.email,
+      role: payload.role,
+      name: payload.name
+    };
   } catch (error) {
-    console.error('Error fetching user profile:', error);
-    return null;
+    console.error('Error getting user profile:', error);
+    localStorage.removeItem('token');
+    throw new Error('User not authenticated');
   }
 };
-
-// Implement other auth-related functions (logout, etc.)

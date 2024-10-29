@@ -3,21 +3,42 @@ import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/auth';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'student'
+  });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    // Client-side validation
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     try {
-      await registerUser(name, email, password, role);
-      navigate('/login');
+      const userData = await registerUser(formData);
+      console.log('Registration successful:', userData);
+      navigate(userData.role === 'faculty' ? '/faculty/dashboard' : '/student/dashboard');
     } catch (err) {
       setError(err.message);
+      console.error('Registration error:', err);
     }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value
+    });
+    // Clear error when user starts typing
+    setError('');
   };
 
   return (
@@ -31,8 +52,8 @@ const Register = () => {
             <input
               type="text"
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={formData.name}
+              onChange={handleChange}
               className="w-full px-3 py-2 border rounded"
               required
             />
@@ -42,36 +63,43 @@ const Register = () => {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
               className="w-full px-3 py-2 border rounded"
               required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="password" className="block mb-2">Password</label>
+            <label htmlFor="password" className="block mb-2">
+              Password
+              <span className="text-sm text-gray-500 ml-1">(minimum 6 characters)</span>
+            </label>
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
               className="w-full px-3 py-2 border rounded"
               required
+              minLength={6}
             />
           </div>
           <div className="mb-4">
             <label htmlFor="role" className="block mb-2">Role</label>
             <select
               id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              value={formData.role}
+              onChange={handleChange}
               className="w-full px-3 py-2 border rounded"
             >
               <option value="student">Student</option>
               <option value="faculty">Faculty</option>
             </select>
           </div>
-          <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          <button 
+            type="submit" 
+            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          >
             Register
           </button>
         </form>

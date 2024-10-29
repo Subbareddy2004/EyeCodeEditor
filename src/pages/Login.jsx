@@ -10,13 +10,22 @@ const Login = ({ setUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
     try {
-      const userData = await loginUser(email, password);
-      localStorage.setItem('token', userData.token);
-      setUser(userData.user);
-      navigate(userData.user.role === 'faculty' ? '/faculty/dashboard' : '/student/dashboard');
+      const response = await loginUser(email, password);
+      console.log('Login response:', response); // Debug log
+      
+      if (response && response.user) {
+        setUser(response.user);
+        localStorage.setItem('token', response.token);
+        navigate(response.user.role === 'faculty' ? '/faculty/dashboard' : '/student/dashboard');
+      } else {
+        setError('Invalid login response');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Login failed');
+      console.error('Login error:', err);
     }
   };
 
@@ -48,7 +57,10 @@ const Login = ({ setUser }) => {
               required
             />
           </div>
-          <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          <button 
+            type="submit" 
+            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          >
             Login
           </button>
         </form>
