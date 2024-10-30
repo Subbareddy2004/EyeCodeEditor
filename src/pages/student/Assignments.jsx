@@ -1,21 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaCalendarAlt, FaClipboardCheck, FaSearch } from 'react-icons/fa';
+import { FaSearch, FaCalendarAlt, FaClipboardCheck } from 'react-icons/fa';
 import ProblemSolver from '../../components/ProblemSolver';
+import { getAssignments } from '../../services/assignmentService';
 
 const Assignments = () => {
   const [assignments, setAssignments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProblemId, setSelectedProblemId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulating API call
-    setAssignments([
-      { id: '1', title: 'Array Manipulation', dueDate: '2023-05-19T23:59:59Z', status: 'Pending', problems: [{ id: '1', title: 'Problem 1' }, { id: '2', title: 'Problem 2' }] },
-      { id: '2', title: 'Dynamic Programming Basics', dueDate: '2023-05-23T23:59:59Z', status: 'Completed', problems: [{ id: '3', title: 'Problem 3' }] },
-      { id: '3', title: 'Graph Algorithms', dueDate: '2023-05-25T23:59:59Z', status: 'Pending', problems: [{ id: '4', title: 'Problem 4' }, { id: '5', title: 'Problem 5' }] },
-    ]);
+    const fetchAssignments = async () => {
+      try {
+        setLoading(true);
+        const assignmentsData = await getAssignments();
+        setAssignments(assignmentsData);
+      } catch (error) {
+        console.error('Error fetching assignments:', error);
+        setError('Failed to load assignments. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssignments();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 mt-8">
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   const filteredAssignments = assignments.filter(assignment =>
     assignment.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -35,6 +61,7 @@ const Assignments = () => {
           />
           <FaSearch className="absolute left-3 top-3 text-indigo-400" />
         </div>
+
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           <table className="min-w-full">
             <thead className="bg-indigo-600 text-white">
@@ -47,7 +74,7 @@ const Assignments = () => {
             </thead>
             <tbody className="bg-white divide-y divide-indigo-200">
               {filteredAssignments.map((assignment) => (
-                <tr key={assignment.id} className="hover:bg-indigo-50">
+                <tr key={assignment._id} className="hover:bg-indigo-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-indigo-600 hover:text-indigo-900">{assignment.title}</span>
                   </td>
@@ -65,8 +92,8 @@ const Assignments = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {assignment.problems.map((problem) => (
                       <button
-                        key={problem.id}
-                        onClick={() => setSelectedProblemId(problem.id)}
+                        key={problem._id}
+                        onClick={() => setSelectedProblemId(problem._id)}
                         className="mr-2 px-2 py-1 bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
                       >
                         {problem.title}

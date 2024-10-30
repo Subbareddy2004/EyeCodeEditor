@@ -2,23 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaSearch, FaFilter, FaTag } from 'react-icons/fa';
 import ProblemSolver from '../../components/ProblemSolver';
+import { getProblems } from '../../services/problems';
 
 const Problems = () => {
   const [problems, setProblems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [selectedProblemId, setSelectedProblemId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulating API call
-    setProblems([
-      { id: '1', title: 'Two Sum', difficulty: 'Easy', acceptance: 45, tags: ['Array', 'Hash Table'] },
-      { id: '2', title: 'Reverse Linked List', difficulty: 'Medium', acceptance: 62, tags: ['Linked List'] },
-      { id: '3', title: 'Binary Tree Maximum Path Sum', difficulty: 'Hard', acceptance: 35, tags: ['Tree', 'DFS'] },
-      { id: '4', title: 'Valid Parentheses', difficulty: 'Easy', acceptance: 39, tags: ['Stack', 'String'] },
-      { id: '5', title: 'Merge K Sorted Lists', difficulty: 'Hard', acceptance: 41, tags: ['Linked List', 'Divide and Conquer'] },
-    ]);
+    const fetchProblems = async () => {
+      try {
+        setLoading(true);
+        const problemsData = await getProblems();
+        const sanitizedProblems = problemsData.map(problem => ({
+          _id: problem._id,
+          title: problem.title,
+          difficulty: problem.difficulty,
+          acceptance: problem.acceptance || 0,
+          tags: problem.tags || [],
+          createdBy: problem.createdBy
+        }));
+        setProblems(sanitizedProblems);
+      } catch (error) {
+        console.error('Error fetching problems:', error);
+        setError('Failed to load problems. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProblems();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 mt-8">
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   const filteredProblems = problems.filter(problem => 
     problem.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -63,10 +96,10 @@ const Problems = () => {
             </thead>
             <tbody className="bg-white divide-y divide-indigo-200">
               {filteredProblems.map((problem) => (
-                <tr key={problem.id} className="hover:bg-indigo-50">
+                <tr key={problem._id} className="hover:bg-indigo-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => setSelectedProblemId(problem.id)}
+                      onClick={() => setSelectedProblemId(problem._id)}
                       className="text-indigo-600 hover:text-indigo-900 font-medium"
                     >
                       {problem.title}
@@ -81,11 +114,14 @@ const Problems = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {problem.acceptance}%
+                    {problem.acceptance || 0}%
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {problem.tags.map((tag, index) => (
-                      <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
+                    {(problem.tags || []).map((tag, index) => (
+                      <span 
+                        key={index} 
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 mr-2"
+                      >
                         <FaTag className="mr-1" />
                         {tag}
                       </span>

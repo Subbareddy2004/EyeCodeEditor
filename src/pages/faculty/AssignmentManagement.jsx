@@ -35,8 +35,8 @@ const AssignmentManagement = () => {
     try {
       const problems = await getFacultyProblems();
       setAvailableProblems(problems);
-    } catch (err) {
-      console.error('Failed to load problems:', err);
+    } catch (error) {
+      toast.error('Failed to load problems');
     }
   };
 

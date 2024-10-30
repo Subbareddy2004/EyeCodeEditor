@@ -35,6 +35,8 @@ import Profile from './pages/faculty/Profile'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Toaster } from 'react-hot-toast';
+import CreateContest from './pages/faculty/CreateContest';
+import EditContest from './pages/faculty/EditContest';
 
 
 function App() {
@@ -106,6 +108,8 @@ function App() {
             />
             <Route path="/problems/:id" element={<ProblemSolving user={user} />} />
             <Route path="/faculty/problems" element={<ProblemList user={user} onLogout={handleLogout} />} />
+            <Route path="/faculty/contests/create" element={<CreateContest />} />
+            <Route path="/faculty/contests/:id/edit" element={<EditContest />} />
           </Routes>
         </main>
       </div>
