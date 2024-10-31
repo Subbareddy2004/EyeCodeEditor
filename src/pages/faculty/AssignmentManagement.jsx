@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFacultyProblems } from '../../services/problemService';
 import { createAssignment, getAssignments, updateAssignment, deleteAssignment, getAssignmentSubmissions } from '../../services/assignmentService';
+import { useTheme } from '../../contexts/ThemeContext';
+import { FaSpinner } from 'react-icons/fa';
 
 const AssignmentManagement = () => {
   const [assignments, setAssignments] = useState([]);
@@ -16,6 +18,8 @@ const AssignmentManagement = () => {
   const [submissions, setSubmissions] = useState([]);
   const [showSubmissions, setShowSubmissions] = useState(false);
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadAssignments();
@@ -28,6 +32,8 @@ const AssignmentManagement = () => {
       setAssignments(data);
     } catch (err) {
       console.error('Failed to load assignments:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,9 +103,15 @@ const AssignmentManagement = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className={`min-h-screen p-6 ${
+      darkMode 
+        ? 'bg-[#1a1f2c]' 
+        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+    }`}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Assignment Management</h1>
+        <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Assignment Management
+        </h1>
         <button
           onClick={() => {
             setFormData({ title: '', dueDate: '', problems: [] });
@@ -110,6 +122,58 @@ const AssignmentManagement = () => {
           + Create Assignment
         </button>
       </div>
+
+      {loading ? (
+        <div className={`flex justify-center items-center py-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          <FaSpinner className="animate-spin text-3xl mr-2" />
+          <span>Loading assignments...</span>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow">
+          <div className="min-w-full">
+            <div className="bg-blue-600 text-white uppercase text-sm leading-normal">
+              <div className="grid grid-cols-5 p-3">
+                <div>Title</div>
+                <div>Due Date</div>
+                <div>Status</div>
+                <div>Problems</div>
+                <div>Actions</div>
+              </div>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {assignments.map((assignment) => (
+                <div key={assignment._id} className="grid grid-cols-5 p-4 hover:bg-gray-50">
+                  <div>{assignment.title}</div>
+                  <div>{new Date(assignment.dueDate).toLocaleDateString()}</div>
+                  <div>
+                    <button
+                      onClick={() => viewSubmissions(assignment)}
+                      className="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    >
+                      View Submissions
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {assignment.problems.map(problem => (
+                      <span key={problem._id} className="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                        {problem.title}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="space-x-2">
+                    <button onClick={() => handleEdit(assignment)} className="text-blue-600 hover:text-blue-800">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(assignment._id)} className="text-red-600 hover:text-red-800">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
@@ -194,51 +258,6 @@ const AssignmentManagement = () => {
           </div>
         </div>
       )}
-
-      <div className="bg-white rounded-lg shadow">
-        <div className="min-w-full">
-          <div className="bg-blue-600 text-white uppercase text-sm leading-normal">
-            <div className="grid grid-cols-5 p-3">
-              <div>Title</div>
-              <div>Due Date</div>
-              <div>Status</div>
-              <div>Problems</div>
-              <div>Actions</div>
-            </div>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {assignments.map((assignment) => (
-              <div key={assignment._id} className="grid grid-cols-5 p-4 hover:bg-gray-50">
-                <div>{assignment.title}</div>
-                <div>{new Date(assignment.dueDate).toLocaleDateString()}</div>
-                <div>
-                  <button
-                    onClick={() => viewSubmissions(assignment)}
-                    className="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
-                  >
-                    View Submissions
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {assignment.problems.map(problem => (
-                    <span key={problem._id} className="inline-block bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
-                      {problem.title}
-                    </span>
-                  ))}
-                </div>
-                <div className="space-x-2">
-                  <button onClick={() => handleEdit(assignment)} className="text-blue-600 hover:text-blue-800">
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(assignment._id)} className="text-red-600 hover:text-red-800">
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {showSubmissions && selectedAssignment && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">

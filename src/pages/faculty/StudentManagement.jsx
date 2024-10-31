@@ -1,8 +1,9 @@
 // client/src/pages/faculty/StudentManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { FaUpload, FaDownload, FaUserGraduate, FaPlus, FaTimes, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaUpload, FaDownload, FaUserGraduate, FaPlus, FaTimes, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
 import { importStudents, getStudents, addStudent, deleteStudent, updateStudent } from '../../services/studentService';
 import { toast } from 'react-toastify';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
@@ -16,6 +17,7 @@ const StudentManagement = () => {
   });
   const [editingStudent, setEditingStudent] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     loadStudents();
@@ -116,9 +118,15 @@ const StudentManagement = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className={`p-6 min-h-screen ${
+      darkMode 
+        ? 'bg-[#1a1f2c]' 
+        : 'bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100'
+    }`}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Student Management</h1>
+        <h1 className={`text-2xl font-bold ${
+          darkMode ? 'text-white' : 'text-gray-800'
+        }`}>Student Management</h1>
         <div className="flex space-x-4">
           <button
             onClick={downloadTemplate}
@@ -151,47 +159,71 @@ const StudentManagement = () => {
       {/* Add Student Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+          <div className={`p-6 rounded-lg shadow-xl w-full max-w-md ${
+            darkMode ? 'bg-[#242b3d]' : 'bg-white'
+          }`}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Add New Student</h2>
-              <button onClick={() => setShowAddForm(false)} className="text-gray-500 hover:text-gray-700">
+              <h2 className={`text-xl font-bold ${
+                darkMode ? 'text-white' : 'text-gray-800'
+              }`}>Add New Student</h2>
+              <button onClick={() => setShowAddForm(false)} className={`${
+                darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+              }`}>
                 <FaTimes />
               </button>
             </div>
             <form onSubmit={handleAddStudent}>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Name
                 </label>
                 <input
                   type="text"
                   value={newStudent.name}
                   onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                  className="w-full p-2 border rounded"
+                  className={`w-full p-2 rounded ${
+                    darkMode 
+                      ? 'bg-[#1a1f2c] border-[#2d3548] text-white' 
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Email
                 </label>
                 <input
                   type="email"
                   value={newStudent.email}
                   onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
-                  className="w-full p-2 border rounded"
+                  className={`w-full p-2 rounded ${
+                    darkMode 
+                      ? 'bg-[#1a1f2c] border-[#2d3548] text-white' 
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Registration Number
                 </label>
                 <input
                   type="text"
                   value={newStudent.regNumber}
                   onChange={(e) => setNewStudent({...newStudent, regNumber: e.target.value})}
-                  className="w-full p-2 border rounded"
+                  className={`w-full p-2 rounded ${
+                    darkMode 
+                      ? 'bg-[#1a1f2c] border-[#2d3548] text-white' 
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                   required
                 />
               </div>
@@ -218,19 +250,27 @@ const StudentManagement = () => {
       {/* Edit Student Modal */}
       {showEditForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+          <div className={`p-6 rounded-lg shadow-xl w-full max-w-md ${
+            darkMode ? 'bg-[#242b3d]' : 'bg-white'
+          }`}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Edit Student</h2>
+              <h2 className={`text-xl font-bold ${
+                darkMode ? 'text-white' : 'text-gray-800'
+              }`}>Edit Student</h2>
               <button onClick={() => {
                 setShowEditForm(false);
                 setEditingStudent(null);
-              }} className="text-gray-500 hover:text-gray-700">
+              }} className={`${
+                darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+              }`}>
                 <FaTimes />
               </button>
             </div>
             <form onSubmit={handleEditStudent}>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Name
                 </label>
                 <input
@@ -240,12 +280,18 @@ const StudentManagement = () => {
                     ...editingStudent,
                     name: e.target.value
                   })}
-                  className="w-full p-2 border rounded"
+                  className={`w-full p-2 rounded ${
+                    darkMode 
+                      ? 'bg-[#1a1f2c] border-[#2d3548] text-white' 
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Email
                 </label>
                 <input
@@ -255,12 +301,18 @@ const StudentManagement = () => {
                     ...editingStudent,
                     email: e.target.value
                   })}
-                  className="w-full p-2 border rounded"
+                  className={`w-full p-2 rounded ${
+                    darkMode 
+                      ? 'bg-[#1a1f2c] border-[#2d3548] text-white' 
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className={`block text-sm font-bold mb-2 ${
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Registration Number
                 </label>
                 <input
@@ -270,7 +322,11 @@ const StudentManagement = () => {
                     ...editingStudent,
                     regNumber: e.target.value
                   })}
-                  className="w-full p-2 border rounded"
+                  className={`w-full p-2 rounded ${
+                    darkMode 
+                      ? 'bg-[#1a1f2c] border-[#2d3548] text-white' 
+                      : 'border-gray-300 text-gray-900'
+                  }`}
                   required
                 />
               </div>
@@ -298,19 +354,32 @@ const StudentManagement = () => {
       )}
 
       {loading ? (
-        <div>Loading...</div>
+        <div className={`flex justify-center items-center py-8 ${
+          darkMode ? 'text-white' : 'text-gray-800'
+        }`}>
+          <FaSpinner className="animate-spin text-3xl mr-2" />
+          <span>Loading students...</span>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className={`rounded-lg shadow overflow-hidden ${
+          darkMode ? 'bg-[#242b3d]' : 'bg-white'
+        }`}>
           <table className="min-w-full">
-            <thead className="bg-gray-50">
+            <thead className={darkMode ? 'bg-[#1e2433]' : 'bg-gray-50'}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                  darkMode ? 'text-gray-300' : 'text-gray-500'
+                }`}>
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                  darkMode ? 'text-gray-300' : 'text-gray-500'
+                }`}>
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                  darkMode ? 'text-gray-300' : 'text-gray-500'
+                }`}>
                   Registration Number
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -318,37 +387,49 @@ const StudentManagement = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className={`divide-y ${
+              darkMode ? 'divide-[#2d3548] bg-[#242b3d]' : 'divide-gray-200 bg-white'
+            }`}>
               {students.map((student) => (
-                <tr key={student._id}>
+                <tr key={student._id} className={
+                  darkMode ? 'hover:bg-[#2d3548]' : 'hover:bg-gray-50'
+                }>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <FaUserGraduate className="mr-2 text-gray-400" />
-                      <div className="text-sm font-medium text-gray-900">
+                      <FaUserGraduate className={`mr-2 ${
+                        darkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`} />
+                      <div className={`text-sm font-medium ${
+                        darkMode ? 'text-gray-200' : 'text-gray-900'
+                      }`}>
                         {student.name}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    darkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
                     {student.email}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                    darkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
                     {student.regNumber}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => {
                           setEditingStudent(student);
                           setShowEditForm(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-500 hover:text-blue-600"
                       >
                         <FaEdit />
                       </button>
                       <button
                         onClick={() => handleDeleteStudent(student._id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-500 hover:text-red-600"
                       >
                         <FaTrash />
                       </button>

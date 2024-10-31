@@ -5,6 +5,7 @@ import { FaCalendarAlt, FaClock, FaUsers } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Confetti from 'react-confetti';
 import Modal from '../../components/Modal';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Contests = () => {
   const [contests, setContests] = useState([]);
@@ -13,6 +14,7 @@ const Contests = () => {
   const [selectedContest, setSelectedContest] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     loadContests();
@@ -81,16 +83,24 @@ const Contests = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-purple-100 to-blue-100 min-h-screen">
+    <div className={`min-h-screen p-6 ${
+      darkMode 
+        ? 'bg-[#1a1f2c]' 
+        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+    }`}>
       {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
       
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-purple-900 mb-8">Contests</h1>
+        <h1 className={`text-4xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-purple-900'}`}>Contests</h1>
         
         <input
           type="text"
           placeholder="Search contests..."
-          className="w-full max-w-md px-4 py-2 rounded-lg border mb-6"
+          className={`w-full max-w-md px-4 py-2 rounded-lg border ${
+            darkMode 
+              ? 'bg-[#242b3d] border-[#2d3548] text-white placeholder-gray-400' 
+              : 'bg-white border-purple-200'
+          } mb-6`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -101,27 +111,33 @@ const Contests = () => {
             const registered = isUserRegistered(contest);
             
             return (
-              <div key={contest._id} className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-purple-800 mb-4">
+              <div key={contest._id} className={`${
+                darkMode 
+                  ? 'bg-[#242b3d] border border-[#2d3548]' 
+                  : 'bg-white'
+              } rounded-lg shadow-md p-6`}>
+                <h2 className={`text-2xl font-bold mb-4 ${
+                  darkMode ? 'text-white' : 'text-purple-800'
+                }`}>
                   {contest.title || 'Untitled Contest'}
                 </h2>
                 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-gray-600">
+                  <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     <FaCalendarAlt className="mr-2" />
                     {contest.startTime ? new Date(contest.startTime).toLocaleString() : 'Date TBD'}
                   </div>
-                  <div className="flex items-center text-gray-600">
+                  <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     <FaClock className="mr-2" />
                     {contest.duration || 0} minutes
                   </div>
-                  <div className="flex items-center text-gray-600">
+                  <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                     <FaUsers className="mr-2" />
                     {(contest.participants?.length || 0)} Participants
                   </div>
                 </div>
 
-                <div className="text-purple-600 font-semibold mb-4">
+                <div className={`font-semibold mb-4 ${darkMode ? 'text-blue-400' : 'text-purple-600'}`}>
                   {contest.timeRemaining || 'Time not set'}
                 </div>
 
@@ -131,7 +147,9 @@ const Contests = () => {
                   className={`w-full py-2 px-4 rounded-md text-white font-semibold transition-all transform hover:scale-105 ${
                     registered
                       ? 'bg-green-500 cursor-not-allowed'
-                      : 'bg-purple-500 hover:bg-purple-600'
+                      : darkMode 
+                        ? 'bg-blue-500 hover:bg-blue-600' 
+                        : 'bg-purple-500 hover:bg-purple-600'
                   }`}
                 >
                   {registered ? 'Joined' : 'Register'}
@@ -148,8 +166,8 @@ const Contests = () => {
         onClose={() => setShowTerms(false)}
         title="Contest Terms & Conditions"
       >
-        <div className="p-6">
-          <div className="mb-6 space-y-4 text-gray-700">
+        <div className={`p-6 ${darkMode ? 'bg-[#242b3d] text-white' : 'bg-white text-gray-700'}`}>
+          <div className="mb-6 space-y-4">
             <h3 className="font-bold text-xl mb-4">Please read and accept the following terms:</h3>
             <p>1. You agree to follow all contest rules and guidelines.</p>
             <p>2. You will not share solutions during the contest.</p>
@@ -161,13 +179,21 @@ const Contests = () => {
           <div className="flex justify-end space-x-4">
             <button
               onClick={() => setShowTerms(false)}
-              className="px-4 py-2 border rounded-md hover:bg-gray-100"
+              className={`px-4 py-2 border rounded-md ${
+                darkMode 
+                  ? 'border-[#2d3548] hover:bg-[#2d3548] text-gray-300' 
+                  : 'hover:bg-gray-100'
+              }`}
             >
               Cancel
             </button>
             <button
               onClick={handleAcceptTerms}
-              className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600"
+              className={`px-4 py-2 text-white rounded-md ${
+                darkMode 
+                  ? 'bg-blue-500 hover:bg-blue-600' 
+                  : 'bg-purple-500 hover:bg-purple-600'
+              }`}
             >
               Accept & Join
             </button>

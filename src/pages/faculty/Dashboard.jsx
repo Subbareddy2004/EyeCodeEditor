@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { getContests } from '../../services/contestService';
 import { getSubmissionStats, getRecentSubmissions } from '../../services/submissionService';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -19,6 +20,8 @@ const FacultyDashboard = () => {
     problemDifficultyStats: [],
     recentSubmissions: []
   });
+
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -67,34 +70,69 @@ const FacultyDashboard = () => {
     : '0.0';
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-8">Faculty Dashboard</h1>
-      
-      {/* Quick Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Total Contests</h3>
-          <p className="text-3xl font-bold text-green-600">{stats.totalContests}</p>
+    <div className={`min-h-screen p-6 ${
+      darkMode 
+        ? 'bg-[#1a1f2c]' 
+        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+    }`}>
+      <h1 className={`text-3xl font-bold mb-6 ${
+        darkMode ? 'text-white' : 'text-gray-800'
+      }`}>Faculty Dashboard</h1>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } p-6 rounded-lg shadow-lg`}>
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Total Contests
+          </h3>
+          <p className="text-3xl font-bold text-green-500">{stats.totalContests}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Active Contests</h3>
-          <p className="text-3xl font-bold text-blue-600">{stats.activeContests}</p>
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } p-6 rounded-lg shadow-lg`}>
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Active Contests
+          </h3>
+          <p className="text-3xl font-bold text-blue-500">{stats.activeContests}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Total Submissions</h3>
-          <p className="text-3xl font-bold text-purple-600">{stats.totalSubmissions}</p>
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } p-6 rounded-lg shadow-lg`}>
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Total Submissions
+          </h3>
+          <p className="text-3xl font-bold text-purple-500">{stats.totalSubmissions}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700">Success Rate</h3>
-          <p className="text-3xl font-bold text-orange-600">{successRate}%</p>
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } p-6 rounded-lg shadow-lg`}>
+          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Success Rate
+          </h3>
+          <p className="text-3xl font-bold text-orange-500">{successRate}%</p>
         </div>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Submission Status Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Submission Statistics</h3>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } p-6 rounded-lg shadow-lg`}>
+          <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Submission Statistics
+          </h3>
           <BarChart width={500} height={300} data={stats.submissionStats}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="status" />
@@ -104,10 +142,15 @@ const FacultyDashboard = () => {
             <Bar dataKey="count" fill="#8884d8" />
           </BarChart>
         </div>
-
-        {/* Problem Difficulty Distribution */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Problem Difficulty Distribution</h3>
+        
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } p-6 rounded-lg shadow-lg`}>
+          <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Problem Difficulty Distribution
+          </h3>
           <PieChart width={400} height={300}>
             <Pie
               data={stats.problemDifficultyStats}
@@ -128,42 +171,25 @@ const FacultyDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity and Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Submissions */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Recent Submissions</h3>
-          <div className="space-y-4">
-            {stats.recentSubmissions.map((submission) => (
-              <div key={submission._id} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{submission.student.name}</p>
-                  <p className="text-sm text-gray-600">{submission.problem.title}</p>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-sm ${
-                  submission.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {submission.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-          <div className="space-y-4">
-            <Link to="/faculty/contests" className="block w-full p-3 text-center bg-green-500 text-white rounded-md hover:bg-green-600">
-              Create New Contest
-            </Link>
-            <Link to="/faculty/problems/create" className="block w-full p-3 text-center bg-blue-500 text-white rounded-md hover:bg-blue-600">
-              Add New Problem
-            </Link>
-            <Link to="/faculty/students" className="block w-full p-3 text-center bg-purple-500 text-white rounded-md hover:bg-purple-600">
-              View Student Progress
-            </Link>
-          </div>
+      {/* Quick Actions */}
+      <div className={`${
+        darkMode 
+          ? 'bg-[#242b3d] border border-[#2d3548]' 
+          : 'bg-white/80 backdrop-blur-sm'
+      } p-6 rounded-lg shadow-lg`}>
+        <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Quick Actions
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link to="/faculty/contests" className="block p-3 text-center bg-green-500 text-white rounded-md hover:bg-green-600">
+            Create New Contest
+          </Link>
+          <Link to="/faculty/problems/create" className="block p-3 text-center bg-blue-500 text-white rounded-md hover:bg-blue-600">
+            Add New Problem
+          </Link>
+          <Link to="/faculty/students" className="block p-3 text-center bg-purple-500 text-white rounded-md hover:bg-purple-600">
+            View Student Progress
+          </Link>
         </div>
       </div>
     </div>

@@ -38,12 +38,18 @@ import { Toaster } from 'react-hot-toast';
 import CreateContest from './pages/faculty/CreateContest';
 import EditContest from './pages/faculty/EditContest';
 import { useAuth } from './contexts/AuthContext';
+import { useTheme } from './contexts/ThemeContext';
 
 function App() {
   const { user, login, logout } = useAuth();
+  const { darkMode } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100">
+    <div className={`min-h-screen ${
+      darkMode 
+        ? 'bg-[#1a1f2c]' 
+        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+    }`}>
       {user ? (
         user.role === 'student' ? (
           <StudentHeader user={user} onLogout={logout} />
