@@ -6,6 +6,11 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [stats, setStats] = useState({
+    problemsSolved: 0,
+    collegeRank: 'N/A',
+    completedAssignments: 0
+  });
   const [recentProblems, setRecentProblems] = useState([]);
   const [upcomingAssignments, setUpcomingAssignments] = useState([]);
   const [upcomingContests, setUpcomingContests] = useState([]);
@@ -18,12 +23,14 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
 
-        const [problemsRes, assignmentsRes, contestsRes] = await Promise.all([
-          api.get('/api/problems/recent'),
-          api.get('/api/assignments/upcoming'),
-          api.get('/api/contests/upcoming')
+        const [statsRes, problemsRes, assignmentsRes, contestsRes] = await Promise.all([
+          api.get(`/students/stats/${user._id}`),
+          api.get('/problems/recent'),
+          api.get('/assignments/upcoming'),
+          api.get('/contests/upcoming')
         ]);
 
+        setStats(statsRes.data);
         setRecentProblems(problemsRes.data || []);
         setUpcomingAssignments(assignmentsRes.data || []);
         setUpcomingContests(contestsRes.data || []);
@@ -39,7 +46,7 @@ const Dashboard = () => {
     if (user?._id) {
       fetchDashboardData();
     }
-  }, [user?._id]);
+  }, [user]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -57,7 +64,7 @@ const Dashboard = () => {
           <div className="text-indigo-600 mb-2">
             <FaCode className="text-2xl" />
           </div>
-          <div className="text-4xl font-bold mb-2">0</div>
+          <div className="text-4xl font-bold mb-2">{stats.problemsSolved}</div>
           <div className="text-gray-600">Problems Solved</div>
         </div>
 
@@ -65,7 +72,7 @@ const Dashboard = () => {
           <div className="text-purple-600 mb-2">
             <FaChartLine className="text-2xl" />
           </div>
-          <div className="text-4xl font-bold mb-2">N/A</div>
+          <div className="text-4xl font-bold mb-2">#{stats.collegeRank}</div>
           <div className="text-gray-600">College Ranking</div>
         </div>
 
@@ -73,7 +80,7 @@ const Dashboard = () => {
           <div className="text-green-600 mb-2">
             <FaClipboardList className="text-2xl" />
           </div>
-          <div className="text-4xl font-bold mb-2">0</div>
+          <div className="text-4xl font-bold mb-2">{stats.completedAssignments}</div>
           <div className="text-gray-600">Completed Assignments</div>
         </div>
       </div>
