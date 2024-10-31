@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaSpinner } from 'react-icons/fa';
 import { getStudentLeaderboard } from '../../services/leaderboardService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -33,6 +33,7 @@ const Leaderboard = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { darkMode } = useTheme();
 
   useEffect(() => {
@@ -42,12 +43,14 @@ const Leaderboard = () => {
   const loadLeaderboard = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getStudentLeaderboard();
       // Sort students by score in descending order
       const sortedData = data.sort((a, b) => b.score - a.score);
       setStudents(sortedData);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
+      setError('Failed to load leaderboard data');
     } finally {
       setLoading(false);
     }
@@ -63,6 +66,98 @@ const Leaderboard = () => {
   // Separate current user and other students
   const currentUserData = filteredStudents.find(student => student._id === currentUser._id);
   const otherStudents = filteredStudents.filter(student => student._id !== currentUser._id);
+
+  // Loading State
+  if (loading) {
+    return (
+      <div className={`min-h-screen p-6 ${
+        darkMode 
+          ? 'bg-[#1a1f2c]' 
+          : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+      }`}>
+        <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Leaderboard
+        </h1>
+        
+        <div className={`${
+          darkMode 
+            ? 'bg-[#242b3d] border border-[#2d3548]' 
+            : 'bg-white/80 backdrop-blur-sm'
+        } rounded-lg shadow-lg overflow-hidden`}>
+          {/* Search Bar Skeleton */}
+          <div className={`p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="h-10 bg-gray-300 rounded-lg animate-pulse"></div>
+          </div>
+
+          {/* Table Loading Skeleton */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className={darkMode ? 'bg-[#1a1f2c] border-b border-[#2d3548]' : 'bg-white/50'}>
+                <tr>
+                  <th className="px-6 py-4 w-24">
+                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                  </th>
+                  <th className="px-6 py-4">
+                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                  </th>
+                  <th className="px-6 py-4 w-24">
+                    <div className="h-4 bg-gray-300 rounded animate-pulse"></div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...Array(10)].map((_, index) => (
+                  <tr key={index} className={`${
+                    darkMode ? 'border-b border-[#2d3548]' : 'border-b border-gray-200'
+                  }`}>
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-300 rounded animate-pulse w-8"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gray-300 animate-pulse"></div>
+                        <div className="h-4 bg-gray-300 rounded animate-pulse w-32"></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="h-4 bg-gray-300 rounded animate-pulse w-16 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode 
+          ? 'bg-[#1a1f2c]' 
+          : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+      }`}>
+        <div className="text-center">
+          <p className={`text-xl mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Failed to load leaderboard
+          </p>
+          <button
+            onClick={loadLeaderboard}
+            className={`px-4 py-2 rounded-lg ${
+              darkMode 
+                ? 'bg-blue-500 hover:bg-blue-600' 
+                : 'bg-purple-500 hover:bg-purple-600'
+            } text-white`}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen p-6 ${

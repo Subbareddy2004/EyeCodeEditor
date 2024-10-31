@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaCode, FaTrophy, FaChartLine, FaClipboardList } from 'react-icons/fa';
+import { FaCode, FaTrophy, FaChartLine, FaClipboardList, FaSpinner } from 'react-icons/fa';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -50,8 +50,36 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? 'bg-[#1a1f2c]' : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+      }`}>
+        <div className={`text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          <FaSpinner className="animate-spin text-4xl mx-auto mb-4" />
+          <p className="text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode ? 'bg-[#1a1f2c]' : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+      }`}>
+        <div className="text-center text-red-500">
+          <p className="text-lg">Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${

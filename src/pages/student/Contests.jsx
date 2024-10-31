@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getContests, joinContest } from '../../services/contestService';
-import { FaCalendarAlt, FaClock, FaUsers } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaUsers, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Confetti from 'react-confetti';
 import Modal from '../../components/Modal';
@@ -9,6 +9,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 const Contests = () => {
   const [contests, setContests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [joining, setJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTerms, setShowTerms] = useState(false);
   const [selectedContest, setSelectedContest] = useState(null);
@@ -18,12 +20,13 @@ const Contests = () => {
 
   useEffect(() => {
     loadContests();
-    const timer = setInterval(loadContests, 1000);
+    const timer = setInterval(loadContests, 100000);
     return () => clearInterval(timer);
   }, []);
 
   const loadContests = async () => {
     try {
+      setLoading(true);
       const data = await getContests();
       const contestsWithTime = data.map(contest => ({
         ...contest,
@@ -32,6 +35,8 @@ const Contests = () => {
       setContests(contestsWithTime);
     } catch (error) {
       toast.error('Failed to load contests');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,6 +62,7 @@ const Contests = () => {
 
   const handleAcceptTerms = async () => {
     try {
+      setJoining(true);
       await joinContest(selectedContest._id);
       setShowTerms(false);
       setShowConfetti(true);
@@ -68,6 +74,8 @@ const Contests = () => {
       }, 3000);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to join contest');
+    } finally {
+      setJoining(false);
     }
   };
 
@@ -81,6 +89,41 @@ const Contests = () => {
       return participantId && participantId.toString() === userId.toString();
     });
   };
+
+  // Loading State
+  if (loading) {
+    return (
+      <div className={`min-h-screen p-6 ${
+        darkMode 
+          ? 'bg-[#1a1f2c]' 
+          : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
+      }`}>
+        <div className="max-w-7xl mx-auto">
+          <h1 className={`text-4xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-purple-900'}`}>
+            Contests
+          </h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((_, index) => (
+              <div key={index} className={`${
+                darkMode 
+                  ? 'bg-[#242b3d] border border-[#2d3548]' 
+                  : 'bg-white'
+              } rounded-lg shadow-md p-6 animate-pulse`}>
+                <div className="h-8 bg-gray-300 rounded mb-4"></div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+                </div>
+                <div className="h-10 bg-gray-300 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen p-6 ${
@@ -163,7 +206,7 @@ const Contests = () => {
       {/* Terms and Conditions Modal */}
       <Modal
         isOpen={showTerms}
-        onClose={() => setShowTerms(false)}
+        onClose={() => !joining && setShowTerms(false)}
         title="Contest Terms & Conditions"
       >
         <div className={`p-6 ${darkMode ? 'bg-[#242b3d] text-white' : 'bg-white text-gray-700'}`}>
@@ -179,23 +222,32 @@ const Contests = () => {
           <div className="flex justify-end space-x-4">
             <button
               onClick={() => setShowTerms(false)}
+              disabled={joining}
               className={`px-4 py-2 border rounded-md ${
                 darkMode 
                   ? 'border-[#2d3548] hover:bg-[#2d3548] text-gray-300' 
                   : 'hover:bg-gray-100'
-              }`}
+              } ${joining ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Cancel
             </button>
             <button
               onClick={handleAcceptTerms}
-              className={`px-4 py-2 text-white rounded-md ${
+              disabled={joining}
+              className={`px-4 py-2 text-white rounded-md flex items-center justify-center ${
                 darkMode 
                   ? 'bg-blue-500 hover:bg-blue-600' 
                   : 'bg-purple-500 hover:bg-purple-600'
-              }`}
+              } ${joining ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Accept & Join
+              {joining ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  Joining...
+                </>
+              ) : (
+                'Accept & Join'
+              )}
             </button>
           </div>
         </div>
