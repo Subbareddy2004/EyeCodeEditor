@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../services/auth';
 import { Toaster, toast } from 'react-hot-toast';
 
-const Login = ({ setUser }) => {
+const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +17,7 @@ const Login = ({ setUser }) => {
       console.log('Login response:', response);
       
       if (response && response.user) {
-        setUser(response.user);
+        onLogin(response.user);
         localStorage.setItem('token', response.token);
         toast.success('Login successful!');
         navigate(response.user.role === 'faculty' ? '/faculty/dashboard' : '/student/dashboard');

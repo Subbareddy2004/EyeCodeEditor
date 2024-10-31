@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom'
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import StudentHeader from "./pages/student/Header";
 import FacultyHeader from "./pages/faculty/Header";
 import Header from './components/Header'
@@ -37,82 +37,45 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Toaster } from 'react-hot-toast';
 import CreateContest from './pages/faculty/CreateContest';
 import EditContest from './pages/faculty/EditContest';
-
+import { useAuth } from './contexts/AuthContext';
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchUser = async () => {
-      try {
-        const userData = await getUserProfile();
-        setUser(userData);
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-        localStorage.removeItem('token'); // Clear invalid token
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  }
-
-  const location = useLocation();
-  const isProblemSolvingPage = location.pathname.startsWith('/problems/');
-
-  if (loading) {
-    return <div>Loading...</div>
-  }
-
-  const renderHeader = () => {
-    if (user) {
-      return user.role === 'student' ? (
-        <StudentHeader user={user} onLogout={handleLogout} />
-      ) : (
-        <FacultyHeader user={user} onLogout={handleLogout} />
-      )
-    }
-    return <Header />
-  }
+  const { user, login, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100">
+      {user ? (
+        user.role === 'student' ? (
+          <StudentHeader user={user} onLogout={logout} />
+        ) : (
+          <FacultyHeader user={user} onLogout={logout} />
+        )
+      ) : (
+        <Header />
+      )}
+      
       <ToastContainer />
       <Toaster position="top-right" />
-      {!isProblemSolvingPage && renderHeader()}
-      <main className={isProblemSolvingPage ? '' : 'container mx-auto p-6'}>
+      <main className="container mx-auto p-6">
         <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login setUser={setUser} />} />
-            <Route path="/register" element={<Register />} />
-            <Route 
-              path="/student/*" 
-              element={user && user.role === 'student' ? <StudentRoutes user={user} /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/faculty/*" 
-              element={user && user.role === 'faculty' ? <FacultyRoutes user={user} /> : <Navigate to="/login" />} 
-            />
-            <Route path="/problems/:id" element={<ProblemSolving user={user} />} />
-            <Route path="/faculty/problems" element={<ProblemList user={user} onLogout={handleLogout} />} />
-            <Route path="/faculty/contests/create" element={<CreateContest />} />
-            <Route path="/faculty/contests/:id/edit" element={<EditContest />} />
-          </Routes>
-        </main>
-      </div>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login onLogin={login} />} />
+          <Route path="/register" element={<Register />} />
+          <Route 
+            path="/student/*" 
+            element={user && user.role === 'student' ? <StudentRoutes user={user} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/faculty/*" 
+            element={user && user.role === 'faculty' ? <FacultyRoutes user={user} /> : <Navigate to="/login" />} 
+          />
+          <Route path="/problems/:id" element={<ProblemSolving user={user} />} />
+          <Route path="/faculty/problems" element={<ProblemList user={user} onLogout={logout} />} />
+          <Route path="/faculty/contests/create" element={<CreateContest />} />
+          <Route path="/faculty/contests/:id/edit" element={<EditContest />} />
+        </Routes>
+      </main>
+    </div>
   )
 }
 
