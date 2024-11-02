@@ -1,15 +1,26 @@
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
-  console.log('Token from localStorage:', token ? 'exists' : 'missing'); // Debug log
-  
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-
   return {
-    Authorization: `Bearer ${token}`,
+    'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json'
   };
+};
+
+export const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem('token', token);
+  } else {
+    localStorage.removeItem('token');
+  }
+};
+
+export const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+export const clearAuth = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
 };
 
 export const isAuthenticated = () => {

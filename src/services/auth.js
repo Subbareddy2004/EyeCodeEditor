@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const registerUser = async (userData) => {
@@ -30,34 +32,16 @@ export const registerUser = async (userData) => {
   }
 };
 
-export const loginUser = async (email, password) => {
+export const login = async (email, password) => {
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    console.log('Login response data:', data); // Debug log
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-
-    if (!data.user || !data.token) {
-      throw new Error('Invalid response format');
-    }
-
-    return {
-      user: data.user,
-      token: data.token
-    };
+    return response.data;
   } catch (error) {
-    console.error('Login error:', error);
-    throw error;
+    throw error.response?.data || { message: 'Login failed' };
   }
 };
 
@@ -68,17 +52,11 @@ export const getUserProfile = async () => {
       throw new Error('No token found');
     }
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return {
-      id: payload.id,
-      _id: payload.id, // Add this line to ensure compatibility
-      email: payload.email,
-      role: payload.role,
-      name: payload.name
-    };
+    const response = await axios.get(`${API_URL}/auth/profile`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   } catch (error) {
-    console.error('Error getting user profile:', error);
-    localStorage.removeItem('token');
-    throw new Error('User not authenticated');
+    throw error.response?.data || { message: 'Error fetching user profile' };
   }
 };

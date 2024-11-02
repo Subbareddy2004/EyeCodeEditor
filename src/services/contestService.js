@@ -6,15 +6,24 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 // Student-facing contest functions
 export const getContests = async () => {
   try {
-    const response = await axios.get(
-      `${API_URL}/contests`,
-      { headers: getAuthHeaders() }
-    );
+    const userRole = localStorage.getItem('role');
+    const endpoint = userRole === 'faculty' 
+      ? `${API_URL}/faculty/contests`
+      : `${API_URL}/student/contests`;
+    
+    const response = await axios.get(endpoint, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     console.error('Error fetching contests:', error);
-    throw error.response?.data || { message: 'Failed to fetch contests' };
+    throw error;
   }
+};
+
+const getContestStatus = (startTime, endTime) => {
+  const now = new Date();
+  if (now < new Date(startTime)) return 'Upcoming';
+  if (now > new Date(endTime)) return 'Completed';
+  return 'Active';
 };
 
 export const getContest = async (id) => {

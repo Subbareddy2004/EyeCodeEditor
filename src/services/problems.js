@@ -6,13 +6,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const getProblems = async () => {
   try {
     const response = await axios.get(
-      `${API_URL}/problems`,
+      `${API_URL}/student/problems`,
       { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
     console.error('Error fetching problems:', error);
-    throw error.response?.data || error;
+    throw error;
   }
 };
 

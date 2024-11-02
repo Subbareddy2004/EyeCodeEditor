@@ -24,7 +24,10 @@ const getAvatarBgClass = (userId) => {
     'bg-pink-500',
     'bg-indigo-500'
   ];
-  const index = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  if (!userId) return colors[0]; // Default to first color if no ID
+  
+  const index = userId.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[index % colors.length];
 };
 
@@ -45,6 +48,13 @@ const Leaderboard = () => {
       setLoading(true);
       setError(null);
       const data = await getStudentLeaderboard();
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid leaderboard data received:', data);
+        setError('Invalid leaderboard data');
+        return;
+      }
+
       // Sort students by score in descending order
       const sortedData = data.sort((a, b) => b.score - a.score);
       setStudents(sortedData);
@@ -57,15 +67,19 @@ const Leaderboard = () => {
   };
 
   const filteredStudents = students.filter(student => 
+    student && student.name && 
     student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Find current user's rank
-  const currentUserRank = filteredStudents.findIndex(student => student._id === currentUser._id) + 1;
+  // Find current user's data with null check
+  const currentUserData = currentUser?._id ? 
+    filteredStudents.find(student => student?._id === currentUser._id) : 
+    null;
 
-  // Separate current user and other students
-  const currentUserData = filteredStudents.find(student => student._id === currentUser._id);
-  const otherStudents = filteredStudents.filter(student => student._id !== currentUser._id);
+  // Get other students excluding current user
+  const otherStudents = currentUser?._id ? 
+    filteredStudents.filter(student => student?._id !== currentUser._id) : 
+    filteredStudents;
 
   // Loading State
   if (loading) {
@@ -203,17 +217,26 @@ const Leaderboard = () => {
               </tr>
             </thead>
             <tbody>
-              {/* Current User Row */}
+              {/* Current User Row Always at Top */}
               {currentUserData && (
-                <tr className={`${darkMode ? 'bg-[#2d3548]' : 'bg-purple-50'} border-b border-[#2d3548]`}>
-                  <td className={`px-6 py-4 ${darkMode ? 'text-white' : ''}`}>{currentUserRank}</td>
+                <tr className={`${darkMode ? 'bg-[#2d3548]' : 'bg-purple-50'} sticky top-0 z-10`}>
+                  <td className={`px-6 py-4 ${darkMode ? 'text-white' : ''}`}>
+                    <div className="flex items-center gap-2">
+                      <span>{currentUserData.rank}</span>
+                      {currentUserData.rank <= 3 && (
+                        <span>
+                          {currentUserData.rank === 1 ? '🥇' : currentUserData.rank === 2 ? '🥈' : '🥉'}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className={`w-8 h-8 rounded-full ${getAvatarBgClass(currentUserData._id)} flex items-center justify-center text-white`}>
                         {currentUserData.name.charAt(0).toUpperCase()}
                       </div>
                       <span className={darkMode ? 'text-white' : ''}>
-                        {currentUserData.name} 
+                        {currentUserData.name}
                         <span className={darkMode ? 'text-blue-400' : 'text-purple-600'}> (You)</span>
                       </span>
                     </div>
@@ -223,42 +246,44 @@ const Leaderboard = () => {
                   </td>
                 </tr>
               )}
-              
-              {/* Other Students */}
-              {otherStudents.map((student, index) => {
-                const rank = index + 1;
-                return (
-                  <tr key={student._id} 
-                    className={`${
-                      darkMode 
-                        ? 'hover:bg-[#2d3548] border-b border-[#2d3548]' 
-                        : 'hover:bg-gray-50 border-b border-gray-200'
-                    }`}
-                  >
-                    <td className={`px-6 py-4 ${darkMode ? 'text-white' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        <span>{rank}</span>
-                        {rank <= 3 && (
-                          <span>{rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}</span>
-                        )}
+
+              {/* Separator line */}
+              <tr className={`${darkMode ? 'border-t-2 border-gray-700' : 'border-t-2 border-gray-200'}`}>
+                <td colSpan="3"></td>
+              </tr>
+
+              {/* Other Students with their actual ranks */}
+              {otherStudents.map((student) => (
+                <tr key={student._id} 
+                  className={`${
+                    darkMode 
+                      ? 'hover:bg-[#2d3548] border-b border-[#2d3548]' 
+                      : 'hover:bg-gray-50 border-b border-gray-200'
+                  }`}
+                >
+                  <td className={`px-6 py-4 ${darkMode ? 'text-white' : ''}`}>
+                    <div className="flex items-center gap-2">
+                      <span>{student.rank}</span>
+                      {student.rank <= 3 && (
+                        <span>{student.rank === 1 ? '🥇' : student.rank === 2 ? '🥈' : '🥉'}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-full ${getAvatarBgClass(student._id)} flex items-center justify-center text-white`}>
+                        {student.name.charAt(0).toUpperCase()}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full ${getAvatarBgClass(student._id)} flex items-center justify-center text-white`}>
-                          {student.name.charAt(0).toUpperCase()}
-                        </div>
-                        <span className={darkMode ? 'text-white' : ''}>
-                          {student.name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className={`px-6 py-4 text-right ${darkMode ? 'text-white' : ''}`}>
-                      {student.score}
-                    </td>
-                  </tr>
-                );
-              })}
+                      <span className={darkMode ? 'text-white' : ''}>
+                        {student.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className={`px-6 py-4 text-right ${darkMode ? 'text-white' : ''}`}>
+                    {student.score}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

@@ -15,12 +15,10 @@ const Assignments = () => {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        setLoading(true);
-        const assignmentsData = await getAssignments();
-        setAssignments(assignmentsData);
+        const data = await getAssignments();
+        setAssignments(data);
       } catch (error) {
-        console.error('Error fetching assignments:', error);
-        setError('Failed to load assignments. Please try again later.');
+        setError(error.response?.data?.message || 'Error fetching assignments');
       } finally {
         setLoading(false);
       }
@@ -29,21 +27,8 @@ const Assignments = () => {
     fetchAssignments();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${darkMode ? 'border-blue-400' : 'border-indigo-500'}`}></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`text-center ${darkMode ? 'text-red-400' : 'text-red-600'} mt-8`}>
-        <p>{error}</p>
-      </div>
-    );
-  }
+  if (loading) return <div>Loading assignments...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   const filteredAssignments = assignments.filter(assignment =>
     assignment.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -108,9 +93,9 @@ const Assignments = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {assignment.problems.map((problem) => (
+                    {assignment.problems.map((problem, index) => (
                       <button
-                        key={problem._id}
+                        key={`${assignment._id}-${problem._id || index}`}
                         onClick={() => setSelectedProblemId(problem._id)}
                         className={`mr-2 px-2 py-1 rounded ${
                           darkMode 

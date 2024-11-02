@@ -38,20 +38,21 @@ import { Toaster } from 'react-hot-toast';
 import CreateContest from './pages/faculty/CreateContest';
 import EditContest from './pages/faculty/EditContest';
 import { useAuth } from './contexts/AuthContext';
-import { useTheme } from './contexts/ThemeContext';
+import AdminHeader from "./pages/admin/Header";
+import AdminDashboard from './pages/admin/Dashboard';
+import FacultyManagement from './pages/admin/FacultyManagement';
+import AssignmentForm from './pages/faculty/AssignmentForm';
+import Students from './pages/admin/Students';
 
 function App() {
   const { user, login, logout } = useAuth();
-  const { darkMode } = useTheme();
 
   return (
-    <div className={`min-h-screen ${
-      darkMode 
-        ? 'bg-[#1a1f2c]' 
-        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
-    }`}>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100">
       {user ? (
-        user.role === 'student' ? (
+        user.role === 'admin' ? (
+          <AdminHeader user={user} onLogout={logout} />
+        ) : user.role === 'student' ? (
           <StudentHeader user={user} onLogout={logout} />
         ) : (
           <FacultyHeader user={user} onLogout={logout} />
@@ -67,6 +68,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login onLogin={login} />} />
           <Route path="/register" element={<Register />} />
+          
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/*" 
+            element={user && user.role === 'admin' ? <AdminRoutes user={user} /> : <Navigate to="/login" />} 
+          />
+          
+          {/* Existing Routes */}
           <Route 
             path="/student/*" 
             element={user && user.role === 'student' ? <StudentRoutes user={user} /> : <Navigate to="/login" />} 
@@ -84,6 +93,14 @@ function App() {
     </div>
   )
 }
+
+const AdminRoutes = ({ user }) => (
+  <Routes>
+    <Route path="dashboard" element={<AdminDashboard user={user} />} />
+    <Route path="faculty" element={<FacultyManagement user={user} />} />
+    <Route path="students" element={<Students user={user} />} />
+  </Routes>
+);
 
 const StudentRoutes = ({ user }) => (
   <Routes>
@@ -115,6 +132,8 @@ const FacultyRoutes = ({ user }) => (
     <Route path="contests/:id/details" element={<ContestDetails />} />
     <Route path="contests/:id/leaderboard" element={<ContestLeaderboard />} />
     <Route path="contests/:id/submissions/:studentId" element={<ContestSubmissions />} />
+    <Route path="assignments/create" element={<AssignmentForm user={user} />} />
+    <Route path="assignments/:id/edit" element={<AssignmentForm user={user} />} />
   </Routes>
 );
 

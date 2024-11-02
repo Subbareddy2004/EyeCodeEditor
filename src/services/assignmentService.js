@@ -6,16 +6,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const getAssignments = async () => {
   try {
     const response = await axios.get(
-      `${API_URL}/assignments`,
+      `${API_URL}/student/assignments`,
       { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
     console.error('Error fetching assignments:', error);
-    if (error.response?.status === 500) {
-      throw { message: 'Server error while fetching assignments' };
-    }
-    throw error.response?.data || { message: 'Failed to fetch assignments' };
+    throw error;
   }
 };
 

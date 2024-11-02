@@ -1,199 +1,241 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { getAuthHeaders } from '../../utils/authUtils';
 import { Link } from 'react-router-dom';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell 
-} from 'recharts';
-import { getContests } from '../../services/contestService';
-import { getSubmissionStats, getRecentSubmissions } from '../../services/submissionService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { FaTrophy, FaPlay, FaCode, FaUsers, FaPlus, FaChartBar, FaUserGraduate } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const FacultyDashboard = () => {
+const Dashboard = () => {
+  const { darkMode } = useTheme();
   const [stats, setStats] = useState({
     totalContests: 0,
     activeContests: 0,
     totalSubmissions: 0,
-    successfulSubmissions: 0,
-    submissionStats: [],
-    problemDifficultyStats: [],
-    recentSubmissions: []
+    totalStudents: 0
   });
-
-  const { darkMode } = useTheme();
+  const [submissionData, setSubmissionData] = useState([]);
+  const [difficultyData, setDifficultyData] = useState([]);
+  const [recentSubmissions, setRecentSubmissions] = useState([]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Fetch contests
-        const contests = await getContests();
-        const now = new Date();
-        const activeContests = contests.filter(contest => {
-          const startTime = new Date(contest.startTime);
-          const endTime = new Date(startTime.getTime() + contest.duration * 60000);
-          return startTime <= now && endTime >= now;
-        });
-
-        // Fetch submission stats
-        const submissionStatsData = await getSubmissionStats();
-        const recentSubmissionsData = await getRecentSubmissions();
-
-        // Calculate success rate
-        const successfulSubmissions = submissionStatsData.find(stat => stat.status === 'Accepted')?.count || 0;
-        const totalSubmissions = submissionStatsData.reduce((acc, stat) => acc + stat.count, 0);
-
-        setStats({
-          totalContests: contests.length,
-          activeContests: activeContests.length,
-          totalSubmissions,
-          successfulSubmissions,
-          submissionStats: submissionStatsData,
-          problemDifficultyStats: [
-            { difficulty: 'Easy', count: contests.filter(c => c.difficulty === 'Easy').length },
-            { difficulty: 'Medium', count: contests.filter(c => c.difficulty === 'Medium').length },
-            { difficulty: 'Hard', count: contests.filter(c => c.difficulty === 'Hard').length }
-          ],
-          recentSubmissions: recentSubmissionsData
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      }
-    };
-
-    fetchDashboardData();
+    fetchDashboardStats();
+    fetchSubmissionStats();
+    fetchDifficultyDistribution();
+    fetchRecentSubmissions();
   }, []);
 
-  // Calculate success rate percentage
-  const successRate = stats.totalSubmissions > 0 
-    ? ((stats.successfulSubmissions / stats.totalSubmissions) * 100).toFixed(1) 
-    : '0.0';
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/faculty/dashboard`,
+        { headers: getAuthHeaders() }
+      );
+      
+      setStats({
+        totalContests: response.data.stats.contestCount || 0,
+        activeContests: response.data.stats.activeContestCount || 0,
+        totalSubmissions: response.data.stats.submissionCount || 0,
+        totalStudents: response.data.stats.studentCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
+
+  const fetchSubmissionStats = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/faculty/submission-stats`,
+        { headers: getAuthHeaders() }
+      );
+      setSubmissionData(response.data);
+    } catch (error) {
+      console.error('Error fetching submission stats:', error);
+    }
+  };
+
+  const fetchDifficultyDistribution = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/faculty/problem-difficulty-stats`,
+        { headers: getAuthHeaders() }
+      );
+      setDifficultyData(response.data);
+    } catch (error) {
+      console.error('Error fetching difficulty distribution:', error);
+    }
+  };
+
+  const fetchRecentSubmissions = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/faculty/recent-submissions`,
+        { headers: getAuthHeaders() }
+      );
+      setRecentSubmissions(response.data);
+    } catch (error) {
+      console.error('Error fetching recent submissions:', error);
+    }
+  };
+
+  const StatCard = ({ title, value, icon, color }) => (
+    <div className={`p-6 rounded-lg shadow-md ${
+      darkMode ? 'bg-[#242b3d] border border-gray-700' : 'bg-white'
+    }`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className={`text-lg font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            {title}
+          </h3>
+          <p className={`text-3xl font-bold ${color}`}>
+            {value}
+          </p>
+        </div>
+        <div className={`text-3xl ${color}`}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className={`min-h-screen p-6 ${
-      darkMode 
-        ? 'bg-[#1a1f2c]' 
-        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100'
-    }`}>
-      <h1 className={`text-3xl font-bold mb-6 ${
-        darkMode ? 'text-white' : 'text-gray-800'
-      }`}>Faculty Dashboard</h1>
+    <div className={`min-h-screen ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gradient-to-br from-indigo-100 to-blue-200'}`}>
+      <div className="container mx-auto p-6">
+        <h1 className={`text-3xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Faculty Dashboard
+        </h1>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className={`${
-          darkMode 
-            ? 'bg-[#242b3d] border border-[#2d3548]' 
-            : 'bg-white/80 backdrop-blur-sm'
-        } p-6 rounded-lg shadow-lg`}>
-          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Total Contests
-          </h3>
-          <p className="text-3xl font-bold text-green-500">{stats.totalContests}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            title="Total Contests"
+            value={stats.totalContests}
+            icon={<FaTrophy />}
+            color="text-green-500"
+          />
+          <StatCard
+            title="Active Contests"
+            value={stats.activeContests}
+            icon={<FaPlay />}
+            color="text-blue-500"
+          />
+          <StatCard
+            title="Total Submissions"
+            value={stats.totalSubmissions}
+            icon={<FaCode />}
+            color="text-purple-500"
+          />
+          <StatCard
+            title="Total Students"
+            value={stats.totalStudents}
+            icon={<FaUsers />}
+            color="text-orange-500"
+          />
         </div>
-        <div className={`${
-          darkMode 
-            ? 'bg-[#242b3d] border border-[#2d3548]' 
-            : 'bg-white/80 backdrop-blur-sm'
-        } p-6 rounded-lg shadow-lg`}>
-          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Active Contests
-          </h3>
-          <p className="text-3xl font-bold text-blue-500">{stats.activeContests}</p>
-        </div>
-        <div className={`${
-          darkMode 
-            ? 'bg-[#242b3d] border border-[#2d3548]' 
-            : 'bg-white/80 backdrop-blur-sm'
-        } p-6 rounded-lg shadow-lg`}>
-          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Total Submissions
-          </h3>
-          <p className="text-3xl font-bold text-purple-500">{stats.totalSubmissions}</p>
-        </div>
-        <div className={`${
-          darkMode 
-            ? 'bg-[#242b3d] border border-[#2d3548]' 
-            : 'bg-white/80 backdrop-blur-sm'
-        } p-6 rounded-lg shadow-lg`}>
-          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Success Rate
-          </h3>
-          <p className="text-3xl font-bold text-orange-500">{successRate}%</p>
-        </div>
-      </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className={`${
-          darkMode 
-            ? 'bg-[#242b3d] border border-[#2d3548]' 
-            : 'bg-white/80 backdrop-blur-sm'
-        } p-6 rounded-lg shadow-lg`}>
-          <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Submission Statistics
-          </h3>
-          <BarChart width={500} height={300} data={stats.submissionStats}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="status" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="count" fill="#8884d8" />
-          </BarChart>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Submission Statistics */}
+          <div className={`p-6 rounded-lg shadow-md ${
+            darkMode ? 'bg-[#242b3d] border border-gray-700' : 'bg-white'
+          }`}>
+            <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              Submission Statistics
+            </h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={submissionData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#4F46E5" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Problem Difficulty Distribution */}
+          <div className={`p-6 rounded-lg shadow-md ${
+            darkMode ? 'bg-[#242b3d] border border-gray-700' : 'bg-white'
+          }`}>
+            <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              Problem Difficulty Distribution
+            </h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={difficultyData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
+                    <Cell fill="#22C55E" /> {/* Easy */}
+                    <Cell fill="#EAB308" /> {/* Medium */}
+                    <Cell fill="#EF4444" /> {/* Hard */}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
-        
-        <div className={`${
-          darkMode 
-            ? 'bg-[#242b3d] border border-[#2d3548]' 
-            : 'bg-white/80 backdrop-blur-sm'
-        } p-6 rounded-lg shadow-lg`}>
-          <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Problem Difficulty Distribution
-          </h3>
-          <PieChart width={400} height={300}>
-            <Pie
-              data={stats.problemDifficultyStats}
-              dataKey="count"
-              nameKey="difficulty"
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              label
-            >
-              {stats.problemDifficultyStats.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Submissions */}
+          <div className={`p-6 rounded-lg shadow-md ${
+            darkMode ? 'bg-[#242b3d] border border-gray-700' : 'bg-white'
+          }`}>
+            <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              Recent Submissions
+            </h2>
+            <div className="space-y-3">
+              {recentSubmissions.map((submission, index) => (
+                <div key={index} className={`p-3 rounded-lg ${
+                  darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
+                }`}>
+                  <div className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                    {submission.studentName}
+                  </div>
+                  <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {submission.problemTitle}
+                  </div>
+                </div>
               ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </div>
-      </div>
+            </div>
+          </div>
 
-      {/* Quick Actions */}
-      <div className={`${
-        darkMode 
-          ? 'bg-[#242b3d] border border-[#2d3548]' 
-          : 'bg-white/80 backdrop-blur-sm'
-      } p-6 rounded-lg shadow-lg`}>
-        <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/faculty/contests" className="block p-3 text-center bg-green-500 text-white rounded-md hover:bg-green-600">
-            Create New Contest
-          </Link>
-          <Link to="/faculty/problems/create" className="block p-3 text-center bg-blue-500 text-white rounded-md hover:bg-blue-600">
-            Add New Problem
-          </Link>
-          <Link to="/faculty/students" className="block p-3 text-center bg-purple-500 text-white rounded-md hover:bg-purple-600">
-            View Student Progress
-          </Link>
+          {/* Quick Actions */}
+          <div className={`p-6 rounded-lg shadow-md ${
+            darkMode ? 'bg-[#242b3d] border border-gray-700' : 'bg-white'
+          }`}>
+            <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              Quick Actions
+            </h2>
+            <div className="space-y-3">
+              <Link to="/faculty/contests/create" 
+                className="block w-full p-3 text-center text-white bg-green-500 rounded-lg hover:bg-green-600">
+                Create New Contest
+              </Link>
+              <Link to="/faculty/problems/create"
+                className="block w-full p-3 text-center text-white bg-blue-500 rounded-lg hover:bg-blue-600">
+                Add New Problem
+              </Link>
+              <Link to="/faculty/students"
+                className="block w-full p-3 text-center text-white bg-purple-500 rounded-lg hover:bg-purple-600">
+                View Student Progress
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default FacultyDashboard;
+export default Dashboard;

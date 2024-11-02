@@ -1,169 +1,168 @@
 // client/src/pages/faculty/ContestManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getContests, deleteContest } from '../../services/contestService';
-import { FaCalendarAlt, FaClock, FaUsers, FaTrophy, FaSpinner } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { FaEdit, FaTrash, FaTrophy, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
+import toast from 'react-hot-toast';
+import { getAuthHeaders } from '../../utils/authUtils';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ContestManagement = () => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const { darkMode } = useTheme();
 
   useEffect(() => {
-    loadContests();
+    fetchContests();
   }, []);
 
-  const loadContests = async () => {
+  const fetchContests = async () => {
     try {
-      setLoading(true);
-      const data = await getContests();
-      setContests(data);
+      const response = await axios.get(
+        `${API_URL}/faculty/contests`,
+        { headers: getAuthHeaders() }
+      );
+      setContests(response.data);
     } catch (error) {
+      console.error('Error fetching contests:', error);
       toast.error('Failed to load contests');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = () => {
-    navigate('/faculty/contests/create');
-  };
-
-  const handleEdit = (contestId) => {
-    navigate(`/faculty/contests/${contestId}/edit`);
-  };
-
-  const handleDelete = async (contestId) => {
-    if (window.confirm('Are you sure you want to delete this contest?')) {
-      try {
-        await deleteContest(contestId);
-        toast.success('Contest deleted successfully');
-        loadContests();
-      } catch (error) {
-        toast.error('Failed to delete contest');
-      }
+  const handlePublishToggle = async (contestId, currentStatus) => {
+    try {
+      await axios.patch(
+        `${API_URL}/faculty/contests/${contestId}/publish`,
+        { isPublished: !currentStatus },
+        { headers: getAuthHeaders() }
+      );
+      await fetchContests();
+      toast.success(`Contest ${currentStatus ? 'unpublished' : 'published'} successfully`);
+    } catch (error) {
+      console.error('Error toggling publish status:', error);
+      toast.error('Failed to update contest status');
     }
   };
 
-  const handleLeaderboard = (contestId) => {
-    navigate(`/faculty/contests/${contestId}/leaderboard`);
+  const handleDelete = async (contestId) => {
+    if (!window.confirm('Are you sure you want to delete this contest?')) return;
+    
+    try {
+      await axios.delete(
+        `${API_URL}/faculty/contests/${contestId}`,
+        { headers: getAuthHeaders() }
+      );
+      await fetchContests();
+      toast.success('Contest deleted successfully');
+    } catch (error) {
+      console.error('Error deleting contest:', error);
+      toast.error('Failed to delete contest');
+    }
   };
 
   return (
-    <div className={`p-6 min-h-screen ${
-      darkMode 
-        ? 'bg-[#1a1f2c]' 
-        : 'bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100'
-    }`}>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className={`text-4xl font-bold ${
-            darkMode ? 'text-white' : 'text-indigo-900'
-          }`}>Contest Management</h1>
-          <button
-            onClick={handleCreate}
-            className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
-          >
-            + Create Contest
-          </button>
-        </div>
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Contest Management</h1>
+        <Link
+          to="/faculty/contests/create"
+          className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+        >
+          + Create Contest
+        </Link>
+      </div>
 
-        {loading ? (
-          <div className={`flex justify-center items-center py-8 ${
-            darkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            <FaSpinner className="animate-spin text-3xl mr-2" />
-            <span>Loading contests...</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {contests.map((contest) => (
-              <div key={contest._id} className={`p-6 rounded-lg shadow-md ${
-                darkMode 
-                  ? 'bg-[#242b3d] border border-[#2d3548]' 
-                  : 'bg-white'
-              }`}>
-                <h2 className={`text-2xl font-bold mb-4 ${
-                  darkMode ? 'text-white' : 'text-indigo-800'
-                }`}>{contest.title}</h2>
-                
-                <div className={`flex items-center mb-2 ${
-                  darkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  <FaCalendarAlt className="mr-2" />
-                  {new Date(contest.startTime).toLocaleDateString()}
-                </div>
-                
-                <div className={`flex items-center mb-2 ${
-                  darkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  <FaClock className="mr-2" />
-                  {contest.duration} minutes
-                </div>
-                
-                <div className={`flex items-center mb-4 ${
-                  darkMode ? 'text-gray-300' : 'text-gray-600'
-                }`}>
-                  <FaUsers className="mr-2" />
-                  {contest.participants?.length || 0} Participants
-                </div>
-
-                <div className={`mb-4 ${
-                  darkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  <h4 className="font-semibold mb-2">Problems:</h4>
-                  {contest.problems && contest.problems.length > 0 ? (
-                    <ul className="list-disc pl-5">
-                      {contest.problems.map((problemData, index) => {
-                        if (!problemData?.problem) {
-                          return null;
-                        }
-                        return (
-                          <li key={index} className={
-                            darkMode ? 'text-blue-400' : 'text-blue-600'
-                          }>
-                            {problemData.problem.title} ({problemData.points} pts)
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className={`italic ${
-                      darkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>No problems added</p>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleLeaderboard(contest._id)}
-                    className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-                  >
-                    <FaTrophy className="inline mr-2" /> Leaderboard
-                  </button>
-                  <button
-                    onClick={() => handleEdit(contest._id)}
-                    className="flex-1 bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(contest._id)}
-                    className="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {contests.map((contest) => (
+          <div key={contest._id} className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-bold mb-4">{contest.title}</h2>
+            
+            <div className="space-y-3 text-gray-600">
+              <div>
+                <span className="font-semibold">Start:</span>{' '}
+                {new Date(contest.startTime).toLocaleString()}
               </div>
-            ))}
+              
+              <div>
+                <span className="font-semibold">Duration:</span>{' '}
+                <span className="text-lg">
+                  {contest.duration} {contest.duration === 1 ? 'minute' : 'minutes'}
+                </span>
+              </div>
+              
+              <div>
+                <span className="font-semibold">Status:</span>{' '}
+                <span className={`font-medium ${getStatusColor(contest.status)}`}>
+                  {contest.status}
+                </span>
+              </div>
+              
+              <div>
+                <span className="font-semibold">Problems:</span>{' '}
+                <span className="text-lg">{contest.problemCount}</span>
+              </div>
+              
+              <div className="flex items-center">
+                <span className="font-semibold mr-2">Published:</span>
+                <button
+                  onClick={() => handlePublishToggle(contest._id, contest.isPublished)}
+                  className="text-2xl focus:outline-none"
+                >
+                  {contest.isPublished ? (
+                    <FaToggleOn className="text-green-500" />
+                  ) : (
+                    <FaToggleOff className="text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-6 gap-2">
+              <Link 
+                to={`/faculty/contests/${contest._id}/leaderboard`}
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded text-center hover:bg-blue-600"
+              >
+                <FaTrophy className="inline mr-2" /> Leaderboard
+              </Link>
+              
+              <Link 
+                to={`/faculty/contests/${contest._id}/edit`}
+                className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded text-center hover:bg-yellow-600"
+              >
+                <FaEdit className="inline mr-2" /> Edit
+              </Link>
+              
+              <button
+                onClick={() => handleDelete(contest._id)}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                <FaTrash className="inline mr-2" /> Delete
+              </button>
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'Active':
+      return 'text-green-500';
+    case 'Upcoming':
+      return 'text-blue-500';
+    case 'Completed':
+      return 'text-gray-500';
+    case 'Draft':
+      return 'text-yellow-500';
+    default:
+      return 'text-gray-500';
+  }
 };
 
 export default ContestManagement;
