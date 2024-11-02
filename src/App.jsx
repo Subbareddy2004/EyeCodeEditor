@@ -43,27 +43,45 @@ import AdminDashboard from './pages/admin/Dashboard';
 import FacultyManagement from './pages/admin/FacultyManagement';
 import AssignmentForm from './pages/faculty/AssignmentForm';
 import Students from './pages/admin/Students';
+import { useTheme } from './contexts/ThemeContext';
 
 function App() {
   const { user, login, logout } = useAuth();
+  const { darkMode } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100">
+    <div className={`min-h-screen ${
+      darkMode 
+        ? 'bg-[#1a1f2c] text-white border-[#2d3548]' 
+        : 'bg-gradient-to-br from-indigo-100 via-blue-100 to-purple-100 text-gray-800'
+    }`}>
       {user ? (
         user.role === 'admin' ? (
-          <AdminHeader user={user} onLogout={logout} />
+          <div className={`${darkMode ? 'border-[#2d3548]' : 'border-gray-200'}`}>
+            <AdminHeader user={user} onLogout={logout} />
+          </div>
         ) : user.role === 'student' ? (
-          <StudentHeader user={user} onLogout={logout} />
+          <div className={`${darkMode ? 'border-[#2d3548]' : 'border-gray-200'}`}>
+            <StudentHeader user={user} onLogout={logout} />
+          </div>
         ) : (
-          <FacultyHeader user={user} onLogout={logout} />
+          <div className={`${darkMode ? 'border-[#2d3548]' : 'border-gray-200'}`}>
+            <FacultyHeader user={user} onLogout={logout} />
+          </div>
         )
       ) : (
-        <Header />
+        <div className={`${darkMode ? 'border-[#2d3548]' : 'border-gray-200'}`}>
+          <Header />
+        </div>
       )}
       
       <ToastContainer />
       <Toaster position="top-right" />
-      <main className="container mx-auto p-6">
+      <main className={`container mx-auto p-6 ${
+        darkMode 
+          ? 'bg-[#1a1f2c] border-[#2d3548]' 
+          : 'bg-white border-gray-200'
+      }`}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login onLogin={login} />} />

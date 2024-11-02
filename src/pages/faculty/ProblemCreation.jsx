@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createProblem } from '../../services/problems';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const ProblemCreation = ({ user }) => {
+  const { darkMode } = useTheme();
   const navigate = useNavigate();
   const [problem, setProblem] = useState({
     title: '',
@@ -44,42 +46,53 @@ const ProblemCreation = ({ user }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className={`${
+        darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
+      } rounded-lg shadow-md p-6`}>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Create New Problem</h1>
+          <h1 className={`text-2xl font-bold ${
+            darkMode ? 'text-white' : 'text-gray-800'
+          }`}>Create New Problem</h1>
           <button
             onClick={() => navigate('/faculty/problems')}
-            className="text-gray-600 hover:text-gray-800"
+            className={`${
+              darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'
+            }`}
           >
             Back to Problems
           </button>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title and Difficulty */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+              <label className={`block text-sm font-medium mb-2 ${
+                darkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>Title</label>
               <input
                 type="text"
                 value={problem.title}
                 onChange={(e) => setProblem({ ...problem, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  darkMode 
+                    ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                    : 'border-gray-300 text-gray-900'
+                }`}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+              <label className={`block text-sm font-medium mb-2 ${
+                darkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>Difficulty</label>
               <select
                 value={problem.difficulty}
                 onChange={(e) => setProblem({ ...problem, difficulty: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  darkMode 
+                    ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                    : 'border-gray-300 text-gray-900'
+                }`}
               >
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
@@ -88,67 +101,100 @@ const ProblemCreation = ({ user }) => {
             </div>
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className={`block text-sm font-medium mb-2 ${
+              darkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>Description</label>
             <textarea
               value={problem.description}
               onChange={(e) => setProblem({ ...problem, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                  : 'border-gray-300 text-gray-900'
+              }`}
               rows="6"
               required
             />
           </div>
 
-          {/* Sample Input/Output */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sample Input</label>
+              <label className={`block text-sm font-medium mb-2 ${
+                darkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>Sample Input</label>
               <textarea
                 value={problem.sampleInput}
                 onChange={(e) => setProblem({ ...problem, sampleInput: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  darkMode 
+                    ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                    : 'border-gray-300 text-gray-900'
+                }`}
                 rows="4"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sample Output</label>
+              <label className={`block text-sm font-medium mb-2 ${
+                darkMode ? 'text-gray-200' : 'text-gray-700'
+              }`}>Sample Output</label>
               <textarea
                 value={problem.sampleOutput}
                 onChange={(e) => setProblem({ ...problem, sampleOutput: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                  darkMode 
+                    ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                    : 'border-gray-300 text-gray-900'
+                }`}
                 rows="4"
               />
             </div>
           </div>
 
-          {/* Test Cases */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-4">Test Cases</label>
+            <label className={`block text-sm font-medium mb-4 ${
+              darkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>Test Cases</label>
             {problem.testCases.map((testCase, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-md">
+              <div key={index} className={`grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 rounded-md ${
+                darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
+              }`}>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Input</label>
+                  <label className={`block text-xs mb-1 ${
+                    darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>Input</label>
                   <textarea
                     value={testCase.input}
                     onChange={(e) => handleTestCaseChange(index, 'input', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                      darkMode 
+                        ? 'bg-[#242b3d] border-gray-600 text-white' 
+                        : 'border-gray-300 text-gray-900'
+                    }`}
                     rows="3"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Output</label>
+                  <label className={`block text-xs mb-1 ${
+                    darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>Output</label>
                   <textarea
                     value={testCase.output}
                     onChange={(e) => handleTestCaseChange(index, 'output', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+                      darkMode 
+                        ? 'bg-[#242b3d] border-gray-600 text-white' 
+                        : 'border-gray-300 text-gray-900'
+                    }`}
                     rows="3"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => removeTestCase(index)}
-                  className="text-red-600 hover:text-red-800 text-sm"
+                  className={`text-sm ${
+                    darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-800'
+                  }`}
                 >
                   Remove Test Case
                 </button>
@@ -157,18 +203,23 @@ const ProblemCreation = ({ user }) => {
             <button
               type="button"
               onClick={addTestCase}
-              className="mt-2 text-teal-600 hover:text-teal-800 text-sm font-medium"
+              className={`mt-2 text-sm font-medium ${
+                darkMode ? 'text-teal-400 hover:text-teal-300' : 'text-teal-600 hover:text-teal-800'
+              }`}
             >
               + Add Test Case
             </button>
           </div>
 
-          {/* Submit Buttons */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={() => navigate('/faculty/problems')}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className={`px-4 py-2 border rounded-md ${
+                darkMode 
+                  ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             >
               Cancel
             </button>

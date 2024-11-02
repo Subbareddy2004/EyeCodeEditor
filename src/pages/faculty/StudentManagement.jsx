@@ -12,20 +12,30 @@ import {
   FaKey
 } from 'react-icons/fa';
 import { getAuthHeaders } from '../../utils/authUtils';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Move AddStudentForm outside the main component
-const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent }) => (
+const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent, darkMode }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+    <div className={`${
+      darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
+    } rounded-lg p-6 w-full max-w-md`}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Add New Student</h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <h2 className={`text-xl font-bold ${
+          darkMode ? 'text-white' : 'text-gray-800'
+        }`}>Add New Student</h2>
+        <button onClick={onClose} className={`${
+          darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+        }`}>
           <FaTimes />
         </button>
       </div>
+      
       <form onSubmit={onSubmit}>
         <div className="mb-4">
-          <label className="block text-sm font-bold mb-2">Name</label>
+          <label className={`block text-sm font-bold mb-2 ${
+            darkMode ? 'text-gray-200' : 'text-gray-700'
+          }`}>Name</label>
           <input
             type="text"
             name="name"
@@ -34,12 +44,18 @@ const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent }) => (
               ...prev,
               name: e.target.value
             }))}
-            className="w-full p-2 border rounded"
+            className={`w-full p-2 border rounded ${
+              darkMode 
+                ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                : 'border-gray-300 focus:border-blue-500'
+            }`}
             required
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-bold mb-2">Email</label>
+          <label className={`block text-sm font-bold mb-2 ${
+            darkMode ? 'text-gray-200' : 'text-gray-700'
+          }`}>Email</label>
           <input
             type="email"
             name="email"
@@ -48,12 +64,18 @@ const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent }) => (
               ...prev,
               email: e.target.value
             }))}
-            className="w-full p-2 border rounded"
+            className={`w-full p-2 border rounded ${
+              darkMode 
+                ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                : 'border-gray-300 focus:border-blue-500'
+            }`}
             required
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-bold mb-2">Registration Number</label>
+          <label className={`block text-sm font-bold mb-2 ${
+            darkMode ? 'text-gray-200' : 'text-gray-700'
+          }`}>Registration Number</label>
           <input
             type="text"
             name="regNumber"
@@ -62,7 +84,11 @@ const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent }) => (
               ...prev,
               regNumber: e.target.value
             }))}
-            className="w-full p-2 border rounded"
+            className={`w-full p-2 border rounded ${
+              darkMode 
+                ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                : 'border-gray-300 focus:border-blue-500'
+            }`}
             required
           />
         </div>
@@ -70,7 +96,11 @@ const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent }) => (
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+            className={`px-4 py-2 rounded ${
+              darkMode
+                ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+            }`}
           >
             Cancel
           </button>
@@ -95,6 +125,7 @@ const StudentManagement = () => {
     email: '',
     regNumber: ''
   });
+  const { darkMode } = useTheme();
 
   const fetchStudents = async () => {
     try {
@@ -216,34 +247,62 @@ const StudentManagement = () => {
 
   // Add table to display students
   const renderStudentsTable = () => (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className={`rounded-lg shadow overflow-hidden ${
+      darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
+    }`}>
       <table className="min-w-full">
-        <thead className="bg-gray-50">
+        <thead className={`${
+          darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
+        }`}>
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reg Number</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+              darkMode ? 'text-gray-300' : 'text-gray-500'
+            }`}>Name</th>
+            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+              darkMode ? 'text-gray-300' : 'text-gray-500'
+            }`}>Email</th>
+            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+              darkMode ? 'text-gray-300' : 'text-gray-500'
+            }`}>Reg Number</th>
+            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+              darkMode ? 'text-gray-300' : 'text-gray-500'
+            }`}>Actions</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className={`${
+          darkMode ? 'divide-gray-700' : 'divide-gray-200'
+        }`}>
           {students.map((student) => (
-            <tr key={student._id}>
-              <td className="px-6 py-4 whitespace-nowrap">{student.name}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{student.email}</td>
-              <td className="px-6 py-4 whitespace-nowrap">{student.regNumber}</td>
+            <tr key={student._id} className={
+              darkMode ? 'hover:bg-[#1a1f2c]' : 'hover:bg-gray-50'
+            }>
+              <td className={`px-6 py-4 whitespace-nowrap ${
+                darkMode ? 'text-gray-200' : 'text-gray-900'
+              }`}>{student.name}</td>
+              <td className={`px-6 py-4 whitespace-nowrap ${
+                darkMode ? 'text-gray-200' : 'text-gray-900'
+              }`}>{student.email}</td>
+              <td className={`px-6 py-4 whitespace-nowrap ${
+                darkMode ? 'text-gray-200' : 'text-gray-900'
+              }`}>{student.regNumber}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <button 
                   onClick={() => handleResetPassword(student._id)}
-                  className="text-blue-600 hover:text-blue-900 mr-3"
+                  className={`${
+                    darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-900'
+                  } mr-3`}
                   title="Reset Password"
                 >
                   <FaKey />
                 </button>
-                <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                <button className={`${
+                  darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-900'
+                } mr-3`}>
                   <FaEdit />
                 </button>
-                <button className="text-red-600 hover:text-red-900">
+                <button className={`${
+                  darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-900'
+                }`}>
                   <FaTrash />
                 </button>
               </td>
@@ -296,6 +355,7 @@ const StudentManagement = () => {
           onClose={() => setShowAddForm(false)}
           newStudent={newStudent}
           setNewStudent={setNewStudent}
+          darkMode={darkMode}
         />
       )}
 

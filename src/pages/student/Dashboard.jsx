@@ -82,7 +82,7 @@ const Dashboard = () => {
         <ActionCard
           title="Practice"
           description="Solve coding problems"
-          link="/student/practice"
+          link="/student/problems"
           linkText="Start practicing →"
           darkMode={darkMode}
         />

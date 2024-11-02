@@ -40,4 +40,14 @@ export const updatePassword = async (currentPassword, newPassword) => {
     console.error('Error updating password:', error);
     throw error;
   }
+};
+
+export const registerAdmin = async (adminData) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/register-admin`, adminData);
+    return response.data;
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error.response?.data || error;
+  }
 }; 

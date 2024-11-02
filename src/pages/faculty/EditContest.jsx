@@ -133,11 +133,11 @@ const EditContest = () => {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className={`w-full p-3 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full p-3 rounded-lg border ${
                 darkMode 
-                  ? 'bg-[#1a1f2c] border-gray-700 text-white' 
-                  : 'bg-white border-gray-300'
-              }`}
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                  : 'bg-white border-gray-300 focus:border-blue-500'
+              } focus:ring-2 focus:ring-blue-500`}
               required
             />
           </div>
@@ -152,7 +152,11 @@ const EditContest = () => {
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+              className={`w-full p-3 rounded-lg border ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                  : 'bg-white border-gray-300 focus:border-blue-500'
+              } focus:ring-2 focus:ring-blue-500 min-h-[100px]`}
               required
             />
           </div>
@@ -168,7 +172,11 @@ const EditContest = () => {
               name="startTime"
               value={formData.startTime}
               onChange={handleInputChange}
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className={`w-full p-3 rounded-lg border ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                  : 'bg-white border-gray-300 focus:border-blue-500'
+              } focus:ring-2 focus:ring-blue-500`}
               required
             />
           </div>
@@ -184,7 +192,11 @@ const EditContest = () => {
               name="duration"
               value={formData.duration}
               onChange={handleInputChange}
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className={`w-full p-3 rounded-lg border ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white focus:border-blue-500' 
+                  : 'bg-white border-gray-300 focus:border-blue-500'
+              } focus:ring-2 focus:ring-blue-500`}
               min="1"
               required
             />

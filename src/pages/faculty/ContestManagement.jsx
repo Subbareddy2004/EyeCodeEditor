@@ -67,7 +67,9 @@ const ContestManagement = () => {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Contest Management</h1>
+        <h1 className={`text-3xl font-bold ${
+          darkMode ? 'text-white' : 'text-gray-800'
+        }`}>Contest Management</h1>
         <Link
           to="/faculty/contests/create"
           className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
@@ -78,36 +80,52 @@ const ContestManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {contests.map((contest) => (
-          <div key={contest._id} className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-bold mb-4">{contest.title}</h2>
+          <div key={contest._id} className={`${
+            darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
+          } rounded-lg shadow-lg p-6`}>
+            <h2 className={`text-xl font-bold mb-4 ${
+              darkMode ? 'text-white' : 'text-gray-800'
+            }`}>{contest.title}</h2>
             
-            <div className="space-y-3 text-gray-600">
+            <div className={`space-y-3 ${
+              darkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
               <div>
-                <span className="font-semibold">Start:</span>{' '}
+                <span className={`font-semibold ${
+                  darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>Start:</span>{' '}
                 {new Date(contest.startTime).toLocaleString()}
               </div>
               
               <div>
-                <span className="font-semibold">Duration:</span>{' '}
+                <span className={`font-semibold ${
+                  darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>Duration:</span>{' '}
                 <span className="text-lg">
                   {contest.duration} {contest.duration === 1 ? 'minute' : 'minutes'}
                 </span>
               </div>
               
               <div>
-                <span className="font-semibold">Status:</span>{' '}
-                <span className={`font-medium ${getStatusColor(contest.status)}`}>
+                <span className={`font-semibold ${
+                  darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>Status:</span>{' '}
+                <span className={`font-medium ${getStatusColor(contest.status, darkMode)}`}>
                   {contest.status}
                 </span>
               </div>
               
               <div>
-                <span className="font-semibold">Problems:</span>{' '}
+                <span className={`font-semibold ${
+                  darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>Problems:</span>{' '}
                 <span className="text-lg">{contest.problemCount}</span>
               </div>
               
               <div className="flex items-center">
-                <span className="font-semibold mr-2">Published:</span>
+                <span className={`font-semibold mr-2 ${
+                  darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>Published:</span>
                 <button
                   onClick={() => handlePublishToggle(contest._id, contest.isPublished)}
                   className="text-2xl focus:outline-none"
@@ -115,7 +133,9 @@ const ContestManagement = () => {
                   {contest.isPublished ? (
                     <FaToggleOn className="text-green-500" />
                   ) : (
-                    <FaToggleOff className="text-gray-400" />
+                    <FaToggleOff className={`${
+                      darkMode ? 'text-gray-400' : 'text-gray-400'
+                    }`} />
                   )}
                 </button>
               </div>
@@ -150,18 +170,18 @@ const ContestManagement = () => {
   );
 };
 
-const getStatusColor = (status) => {
+const getStatusColor = (status, darkMode) => {
   switch (status) {
     case 'Active':
-      return 'text-green-500';
+      return darkMode ? 'text-green-400' : 'text-green-500';
     case 'Upcoming':
-      return 'text-blue-500';
+      return darkMode ? 'text-blue-400' : 'text-blue-500';
     case 'Completed':
-      return 'text-gray-500';
+      return darkMode ? 'text-gray-400' : 'text-gray-500';
     case 'Draft':
-      return 'text-yellow-500';
+      return darkMode ? 'text-yellow-400' : 'text-yellow-500';
     default:
-      return 'text-gray-500';
+      return darkMode ? 'text-gray-400' : 'text-gray-500';
   }
 };
 

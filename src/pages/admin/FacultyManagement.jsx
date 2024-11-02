@@ -50,7 +50,12 @@ const FacultyManagement = () => {
       }
 
       if (selectedFaculty) {
-        await updateFaculty(selectedFaculty._id, formData);
+        const updateData = {
+          name: formData.name,
+          email: formData.email,
+          ...(formData.password ? { password: formData.password } : {})
+        };
+        await updateFaculty(selectedFaculty._id, updateData);
         toast.success('Faculty updated successfully');
       } else {
         const result = await addFaculty(formData);
@@ -293,63 +298,89 @@ const FacultyManagement = () => {
 
         {/* Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className={`${
-              darkMode ? 'bg-gray-800' : 'bg-white'
+              darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
             } p-6 rounded-lg w-96`}>
-              <h2 className="text-xl font-bold mb-4">
+              <h2 className={`text-xl font-bold mb-4 ${
+                darkMode ? 'text-white' : 'text-gray-800'
+              }`}>
                 {selectedFaculty ? 'Edit Faculty' : 'Add Faculty'}
               </h2>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    darkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     Name
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full p-2 border rounded"
+                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 ${
+                      darkMode 
+                        ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                        : 'border-gray-300 text-gray-900'
+                    }`}
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    darkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
                     Email
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full p-2 border rounded"
+                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 ${
+                      darkMode 
+                        ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                        : 'border-gray-300 text-gray-900'
+                    }`}
                     required
                   />
                 </div>
-                {!selectedFaculty && (
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                  </div>
-                )}
-                <div className="flex justify-end">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${
+                    darkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>
+                    {selectedFaculty ? 'New Password (optional)' : 'Password'}
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 ${
+                      darkMode 
+                        ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                        : 'border-gray-300 text-gray-900'
+                    }`}
+                    {...(!selectedFaculty && { required: true })}
+                  />
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="mr-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+                    className={`px-4 py-2 rounded-md ${
+                      darkMode
+                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className={`px-4 py-2 rounded-md ${
+                      darkMode
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
                   >
                     {selectedFaculty ? 'Update' : 'Add'}
                   </button>
