@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import Confetti from 'react-confetti';
 import Modal from '../../components/Modal';
 import { useTheme } from '../../contexts/ThemeContext';
+import axios from 'axios';
 
 const Contests = () => {
   const [contests, setContests] = useState([]);
@@ -88,6 +89,28 @@ const Contests = () => {
       const participantId = p.user._id || p.user;
       return participantId && participantId.toString() === userId.toString();
     });
+  };
+
+  const handleJoinContest = async (contestId) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/contests/${contestId}/join`,
+        {},
+        getAuthHeaders()
+      );
+
+      if (response.data.status === 'REGISTERED') {
+        toast.success(`Successfully registered! Contest starts at ${new Date(response.data.startTime).toLocaleString()}`);
+      } else {
+        toast.success('Successfully joined the contest!');
+        // Redirect to contest page or refresh contest list
+        navigate(`/student/contests/${contestId}`);
+      }
+
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to join contest';
+      toast.error(errorMessage);
+    }
   };
 
   // Loading State

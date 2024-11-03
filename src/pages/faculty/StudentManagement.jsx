@@ -9,7 +9,8 @@ import {
   FaTimes,
   FaEdit,
   FaTrash,
-  FaKey
+  FaKey,
+  FaSpinner
 } from 'react-icons/fa';
 import { getAuthHeaders } from '../../utils/authUtils';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -176,10 +177,33 @@ const StudentManagement = () => {
     }
   };
 
+  const [actionLoading, setActionLoading] = useState('');
+
+  const handleResetPassword = async (studentId) => {
+    setActionLoading(`reset-${studentId}`);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/faculty/students/${studentId}/reset-password`,
+        {},
+        { headers: getAuthHeaders() }
+      );
+      
+      toast.success(
+        `Password reset successfully! New password: ${response.data.initialPassword}`,
+        { duration: 10000 }
+      );
+    } catch (error) {
+      toast.error('Error resetting password');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setActionLoading('upload');
     const formData = new FormData();
     formData.append('file', file);
 
@@ -209,23 +233,8 @@ const StudentManagement = () => {
       fetchStudents();
     } catch (error) {
       toast.error('Error importing students');
-    }
-  };
-
-  const handleResetPassword = async (studentId) => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/faculty/students/${studentId}/reset-password`,
-        {},
-        { headers: getAuthHeaders() }
-      );
-      
-      toast.success(
-        `Password reset successfully! New password: ${response.data.initialPassword}`,
-        { duration: 10000 }
-      );
-    } catch (error) {
-      toast.error('Error resetting password');
+    } finally {
+      setActionLoading('');
     }
   };
 
@@ -288,12 +297,17 @@ const StudentManagement = () => {
               <td className="px-6 py-4 whitespace-nowrap">
                 <button 
                   onClick={() => handleResetPassword(student._id)}
+                  disabled={actionLoading === `reset-${student._id}`}
                   className={`${
                     darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-900'
-                  } mr-3`}
+                  } mr-3 disabled:opacity-50`}
                   title="Reset Password"
                 >
-                  <FaKey />
+                  {actionLoading === `reset-${student._id}` ? (
+                    <FaSpinner className="animate-spin" />
+                  ) : (
+                    <FaKey />
+                  )}
                 </button>
                 <button className={`${
                   darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-900'
@@ -314,19 +328,33 @@ const StudentManagement = () => {
   );
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className={`flex flex-col justify-center items-center min-h-screen ${
+        darkMode ? 'bg-[#1a1f2c] text-white' : 'bg-gray-50 text-gray-800'
+      }`}>
+        <FaSpinner className="animate-spin text-3xl mb-4" />
+        <span className="text-lg">Loading students...</span>
+      </div>
+    );
   }
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Student Management</h1>
+        <h1 className={`text-2xl font-bold ${
+          darkMode ? 'text-white' : 'text-gray-800'
+        }`}>Student Management</h1>
         <div className="flex space-x-4">
           <button
             onClick={handleDownloadTemplate}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            disabled={actionLoading === 'download'}
+            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
           >
-            <FaDownload className="mr-2" />
+            {actionLoading === 'download' ? (
+              <FaSpinner className="animate-spin mr-2" />
+            ) : (
+              <FaDownload className="mr-2" />
+            )}
             Download Template
           </button>
           <button

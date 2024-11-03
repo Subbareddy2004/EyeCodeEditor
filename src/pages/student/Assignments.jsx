@@ -1,124 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaCalendarAlt, FaClipboardCheck } from 'react-icons/fa';
-import ProblemSolver from '../../components/ProblemSolver';
-import { getAssignments } from '../../services/assignmentService';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { FaCode, FaClock } from 'react-icons/fa';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Assignments = () => {
-  const { darkMode } = useTheme();
   const [assignments, setAssignments] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProblemId, setSelectedProblemId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { darkMode } = useTheme();
 
   useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const data = await getAssignments();
-        setAssignments(data);
-      } catch (error) {
-        setError(error.response?.data?.message || 'Error fetching assignments');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssignments();
+    loadAssignments();
   }, []);
 
-  if (loading) return <div>Loading assignments...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const loadAssignments = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/assignments`);
+      setAssignments(response.data);
+    } catch (error) {
+      toast.error('Failed to load assignments');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredAssignments = assignments.filter(assignment =>
-    assignment.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <div className={`${darkMode ? 'bg-[#1a1f2c]' : 'bg-gradient-to-br from-indigo-100 via-purple-100 to-blue-100'} min-h-screen p-6`}>
-      <div className="max-w-7xl mx-auto">
-        <h1 className={`text-4xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-indigo-900'}`}>Assignments</h1>
-        
-        <div className="mb-6 relative">
-          <input
-            type="text"
-            placeholder="Search assignments..."
-            className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
-              darkMode 
-                ? 'bg-[#242b3d] border-[#2d3548] text-white placeholder-gray-400 focus:ring-blue-500' 
-                : 'bg-white border-indigo-300 focus:ring-indigo-500'
-            }`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <FaSearch className={`absolute left-3 top-3 ${darkMode ? 'text-gray-400' : 'text-indigo-400'}`} />
-        </div>
-
-        <div className={`${darkMode ? 'bg-[#242b3d] shadow-xl' : 'bg-white shadow-lg'} rounded-lg overflow-hidden`}>
-          <table className="min-w-full">
-            <thead className={darkMode ? 'bg-[#1a1f2c]' : 'bg-indigo-600'}>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Due Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Problems</th>
-              </tr>
-            </thead>
-            <tbody className={`${darkMode ? 'bg-[#242b3d] divide-[#2d3548]' : 'bg-white divide-indigo-200'} divide-y`}>
-              {filteredAssignments.map((assignment) => (
-                <tr key={assignment._id} className={darkMode ? 'hover:bg-[#2d3548]' : 'hover:bg-indigo-50'}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-indigo-600 hover:text-indigo-900'}`}>
-                      {assignment.title}
-                    </span>
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    <FaCalendarAlt className="inline mr-2" />
-                    {new Date(assignment.dueDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      darkMode ? (
-                        assignment.status === 'Completed' 
-                          ? 'bg-green-900/50 text-green-300 border border-green-800'
-                          : 'bg-yellow-900/50 text-yellow-300 border border-yellow-800'
-                      ) : (
-                        assignment.status === 'Completed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      )
-                    }`}>
-                      <FaClipboardCheck className="mr-1" />
-                      {assignment.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {assignment.problems.map((problem, index) => (
-                      <button
-                        key={`${assignment._id}-${problem._id || index}`}
-                        onClick={() => setSelectedProblemId(problem._id)}
-                        className={`mr-2 px-2 py-1 rounded ${
-                          darkMode 
-                            ? 'bg-[#1a1f2c] text-blue-300 border border-[#2d3548] hover:bg-[#2d3548]' 
-                            : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
-                        }`}
-                      >
-                        {problem.title}
-                      </button>
-                    ))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+  if (loading) {
+    return (
+      <div className={`min-h-screen p-6 ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-100'}`}>
+        <div className="max-w-7xl mx-auto space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={`p-6 rounded-lg ${darkMode ? 'bg-[#242b3d]' : 'bg-white'} animate-pulse`}>
+              <div className="h-6 bg-gray-300 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+            </div>
+          ))}
         </div>
       </div>
-      {selectedProblemId && (
-        <ProblemSolver
-          problemId={selectedProblemId}
-          onClose={() => setSelectedProblemId(null)}
-        />
-      )}
+    );
+  }
+
+  return (
+    <div className={`min-h-screen p-6 ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-100'}`}>
+      <div className="max-w-7xl mx-auto">
+        <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Assignments
+        </h1>
+
+        <div className="space-y-4">
+          {assignments.map((assignment) => {
+            const dueDate = new Date(assignment.dueDate);
+            const isOverdue = dueDate < new Date();
+            const progress = {
+              completed: assignment.problemsSolved || 0,
+              total: assignment.totalProblems || 0
+            };
+            const isCompleted = progress.completed === progress.total;
+
+            return (
+              <div
+                key={assignment._id}
+                onClick={() => navigate(`/student/assignments/${assignment._id}`)}
+                className={`p-6 rounded-lg cursor-pointer transition-all duration-200 ${
+                  darkMode 
+                    ? 'bg-[#242b3d] hover:bg-[#2d3548]' 
+                    : 'bg-white hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                    {assignment.title}
+                  </h2>
+                  <span className={`px-3 py-1 rounded-full text-sm ${
+                    isOverdue
+                      ? 'bg-red-100 text-red-800'
+                      : isCompleted
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {isOverdue ? 'Overdue' : isCompleted ? 'Completed' : 'In Progress'}
+                  </span>
+                </div>
+
+                <div className={`space-y-2 mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <div className="flex items-center">
+                    <FaCode className="mr-2" />
+                    {progress.completed} / {progress.total} Problems Solved
+                  </div>
+                  <div className="flex items-center">
+                    <FaClock className="mr-2" />
+                    Due: {dueDate.toLocaleDateString()} {dueDate.toLocaleTimeString()}
+                  </div>
+                </div>
+
+                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                  <div
+                    className={`h-2.5 rounded-full ${
+                      isCompleted ? 'bg-green-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${(progress.completed / progress.total) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };

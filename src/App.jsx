@@ -44,6 +44,7 @@ import FacultyManagement from './pages/admin/FacultyManagement';
 import AssignmentForm from './pages/faculty/AssignmentForm';
 import Students from './pages/admin/Students';
 import { useTheme } from './contexts/ThemeContext';
+import AssignmentView from './pages/student/AssignmentView';
 
 function App() {
   const { user, login, logout } = useAuth();
@@ -106,6 +107,7 @@ function App() {
           <Route path="/faculty/problems" element={<ProblemList user={user} onLogout={logout} />} />
           <Route path="/faculty/contests/create" element={<CreateContest />} />
           <Route path="/faculty/contests/:id/edit" element={<EditContest />} />
+          <Route path="/student/assignments/:assignmentId" element={<AssignmentView />} />
         </Routes>
       </main>
     </div>
@@ -132,6 +134,7 @@ const StudentRoutes = ({ user }) => (
     <Route path="profile" element={<StudentProfile user={user} />} />
     <Route path="settings" element={<StudentSettings user={user} />} />
     <Route path="skill-tests" element={<StudentSkillTests user={user} />} />
+    <Route path="assignments/:assignmentId" element={<AssignmentView />} />
   </Routes>
 )
 

@@ -35,6 +35,37 @@ const AssignmentSubmissions = () => {
     }
   };
 
+  const formatProgress = (completed, total) => {
+    return `${completed} / ${total}`;
+  };
+
+  const formatScore = (score) => {
+    return score ? `${score}%` : 'N/A';
+  };
+
+  // Add a function to sort submissions
+  const getSortedSubmissions = () => {
+    return [...submissions].sort((a, b) => {
+      // Sort by score (high to low)
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      // If scores are equal, sort by problems completed
+      if (b.problemsCompleted !== a.problemsCompleted) {
+        return b.problemsCompleted - a.problemsCompleted;
+      }
+      // If problems completed are equal, sort by last submission date
+      if (b.lastSubmission && a.lastSubmission) {
+        return new Date(b.lastSubmission) - new Date(a.lastSubmission);
+      }
+      // Put submissions before non-submissions
+      if (b.lastSubmission && !a.lastSubmission) return 1;
+      if (!b.lastSubmission && a.lastSubmission) return -1;
+      // If all else is equal, sort by name
+      return a.student.name.localeCompare(b.student.name);
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -63,6 +94,7 @@ const AssignmentSubmissions = () => {
         <table className="min-w-full">
           <thead className="bg-blue-500 text-white">
             <tr>
+              <th className="px-6 py-3 text-left">RANK</th>
               <th className="px-6 py-3 text-left">STUDENT</th>
               <th className="px-6 py-3 text-left">STATUS</th>
               <th className="px-6 py-3 text-left">PROBLEMS COMPLETED</th>
@@ -71,15 +103,18 @@ const AssignmentSubmissions = () => {
             </tr>
           </thead>
           <tbody className={`divide-y ${darkMode ? 'divide-gray-700 text-gray-200' : 'divide-gray-200'}`}>
-            {submissions.map((submission) => (
-              <tr key={submission.student._id}>
+            {getSortedSubmissions().map((submission, index) => (
+              <tr key={submission.student.email}>
+                <td className="px-6 py-4">
+                  {index + 1}
+                </td>
                 <td className="px-6 py-4">
                   <div className="font-medium">{submission.student.name}</div>
                   <div className="text-sm text-gray-500">{submission.student.email}</div>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded-full text-sm ${
-                    submission.status === 'Completed'
+                    submission.status === 'PASSED'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-yellow-100 text-yellow-800'
                   }`}>
@@ -87,15 +122,21 @@ const AssignmentSubmissions = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  {submission.completedProblems || 0} / {assignment?.problems?.length || 0}
+                  {`${submission.problemsCompleted || 0} / ${submission.totalProblems || 0}`}
                 </td>
                 <td className="px-6 py-4">
-                  {submission.submittedAt 
-                    ? new Date(submission.submittedAt).toLocaleString()
+                  {submission.lastSubmission 
+                    ? new Date(submission.lastSubmission).toLocaleString()
                     : 'Not submitted'}
                 </td>
                 <td className="px-6 py-4">
-                  {submission.score !== null ? `${submission.score}%` : 'N/A'}
+                  <span className={`font-medium ${
+                    submission.score > 0 
+                      ? 'text-green-500' 
+                      : darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {submission.score > 0 ? `${submission.score}%` : 'N/A'}
+                  </span>
                 </td>
               </tr>
             ))}
