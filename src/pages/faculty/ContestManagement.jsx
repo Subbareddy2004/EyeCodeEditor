@@ -1,22 +1,20 @@
 // client/src/pages/faculty/ContestManagement.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaEdit, FaTrash, FaTrophy, FaToggleOn, FaToggleOff, FaSpinner } from 'react-icons/fa';
+import { FaSpinner, FaTrophy, FaEdit, FaTrash, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
-import toast from 'react-hot-toast';
 import { getAuthHeaders } from '../../utils/authUtils';
+import { toast } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const ContestManagement = () => {
   const [contests, setContests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState('');
   const { darkMode } = useTheme();
-
-  useEffect(() => {
-    fetchContests();
-  }, []);
+  const navigate = useNavigate();
 
   const fetchContests = async () => {
     try {
@@ -27,13 +25,15 @@ const ContestManagement = () => {
       setContests(response.data);
     } catch (error) {
       console.error('Error fetching contests:', error);
-      toast.error('Failed to load contests');
+      toast.error('Failed to load contests: ' + (error.response?.data?.error || error.message));
     } finally {
       setLoading(false);
     }
   };
 
-  const [actionLoading, setActionLoading] = useState('');
+  useEffect(() => {
+    fetchContests();
+  }, []);
 
   const handlePublishToggle = async (contestId, currentStatus) => {
     setActionLoading(`publish-${contestId}`);
@@ -74,26 +74,22 @@ const ContestManagement = () => {
 
   if (loading) {
     return (
-      <div className={`flex flex-col justify-center items-center min-h-screen ${
-        darkMode ? 'bg-[#1a1f2c] text-white' : 'bg-gray-50 text-gray-800'
-      }`}>
-        <div className="flex flex-col items-center space-y-4">
-          <FaSpinner className="animate-spin text-4xl" />
-          <span className="text-lg font-medium">Loading contests...</span>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <FaSpinner className="animate-spin text-3xl mr-2" />
+        <span>Loading contests...</span>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className={`text-3xl font-bold ${
-          darkMode ? 'text-white' : 'text-gray-800'
-        }`}>Contest Management</h1>
+        <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Contest Management
+        </h1>
         <Link
           to="/faculty/contests/create"
-          className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
         >
           + Create Contest
         </Link>
@@ -128,9 +124,7 @@ const ContestManagement = () => {
                   <span className={`font-semibold ${
                     darkMode ? 'text-gray-200' : 'text-gray-700'
                   }`}>Duration:</span>{' '}
-                  <span className="text-lg">
-                    {contest.duration} {contest.duration === 1 ? 'minute' : 'minutes'}
-                  </span>
+                  {contest.duration} minutes
                 </div>
                 
                 <div>
@@ -146,26 +140,35 @@ const ContestManagement = () => {
                   <span className={`font-semibold ${
                     darkMode ? 'text-gray-200' : 'text-gray-700'
                   }`}>Problems:</span>{' '}
-                  <span className="text-lg">{contest.problemCount}</span>
+                  {contest.problemCount}
                 </div>
-                
-                <div className="flex items-center">
-                  <span className={`font-semibold mr-2 ${
+
+                <div>
+                  <span className={`font-semibold ${
+                    darkMode ? 'text-gray-200' : 'text-gray-700'
+                  }`}>Participants:</span>{' '}
+                  {contest.participantCount}
+                </div>
+
+                <div className="flex items-center justify-between mt-4 mb-2">
+                  <span className={`font-semibold ${
                     darkMode ? 'text-gray-200' : 'text-gray-700'
                   }`}>Published:</span>
                   <button
                     onClick={() => handlePublishToggle(contest._id, contest.isPublished)}
                     disabled={actionLoading === `publish-${contest._id}`}
-                    className="text-2xl focus:outline-none disabled:opacity-50"
+                    className={`flex items-center px-3 py-1 rounded ${
+                      contest.isPublished 
+                        ? 'bg-green-500 hover:bg-green-600' 
+                        : 'bg-gray-500 hover:bg-gray-600'
+                    } text-white transition-colors duration-200`}
                   >
                     {actionLoading === `publish-${contest._id}` ? (
-                      <FaSpinner className="animate-spin text-blue-500" />
+                      <FaSpinner className="animate-spin mr-2" />
                     ) : contest.isPublished ? (
-                      <FaToggleOn className="text-green-500" />
+                      <><FaToggleOn className="mr-2" /> Published</>
                     ) : (
-                      <FaToggleOff className={`${
-                        darkMode ? 'text-gray-400' : 'text-gray-400'
-                      }`} />
+                      <><FaToggleOff className="mr-2" /> Draft</>
                     )}
                   </button>
                 </div>

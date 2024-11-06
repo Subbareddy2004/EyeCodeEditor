@@ -7,80 +7,53 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const getProblems = async () => {
   try {
     const response = await axios.get(
-      `${API_URL}/problems`,
+      `${API_URL}/problems/student/problems`,
       { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
     console.error('Error fetching problems:', error);
-    throw error.response?.data || { message: 'Failed to fetch problems' };
+    throw error;
   }
 };
 
-// Get all problems (for faculty)
-export const getFacultyProblems = async () => {
+// Add this function to get all problems
+export const getAllProblems = async () => {
   try {
-    const response = await axios.get(
-      `${API_URL}/faculty/problems`,
-      { headers: getAuthHeaders() }
-    );
+    const response = await axios.get(`${API_URL}/problems`, {
+      headers: getAuthHeaders()
+    });
     return response.data;
   } catch (error) {
-    console.error('Error fetching faculty problems:', error);
-    throw error.response?.data || { message: 'Failed to fetch problems' };
+    console.error('Error fetching problems:', error);
+    throw error;
   }
 };
 
+// Get specific problem
 export const getProblem = async (id) => {
   try {
     const response = await axios.get(
-      `${API_URL}/problems/${id}`,
+      `${API_URL}/problems/student/problems/${id}`,
       { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
     console.error('Error fetching problem:', error);
-    throw error.response?.data || error;
+    throw error;
   }
 };
 
-export const createProblem = async (problemData) => {
+export const runCode = async (problemId, code, language) => {
   try {
     const response = await axios.post(
-      `${API_URL}/faculty/problems`,
-      problemData,
+      `${API_URL}/problems/student/problems/${problemId}/run`,
+      { code, language },
       { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
-    console.error('Error creating problem:', error);
-    throw error.response?.data || { message: 'Failed to create problem' };
-  }
-};
-
-export const updateProblem = async (id, problemData) => {
-  try {
-    const response = await axios.put(
-      `${API_URL}/faculty/problems/${id}`,
-      problemData,
-      { headers: getAuthHeaders() }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error updating problem:', error);
-    throw error.response?.data || error;
-  }
-};
-
-export const deleteProblem = async (id) => {
-  try {
-    const response = await axios.delete(
-      `${API_URL}/faculty/problems/${id}`,
-      { headers: getAuthHeaders() }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting problem:', error);
-    throw error.response?.data || error;
+    console.error('Error running code:', error);
+    throw error;
   }
 };
