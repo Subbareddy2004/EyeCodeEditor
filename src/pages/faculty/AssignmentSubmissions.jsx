@@ -116,13 +116,15 @@ const AssignmentSubmissions = () => {
                   <span className={`px-2 py-1 rounded-full text-sm ${
                     submission.status === 'PASSED'
                       ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                      : submission.status === 'FAILED'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
                   }`}>
                     {submission.status}
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  {`${submission.problemsCompleted || 0} / ${submission.totalProblems || 0}`}
+                  {submission.problemsCompleted}
                 </td>
                 <td className="px-6 py-4">
                   {submission.lastSubmission 

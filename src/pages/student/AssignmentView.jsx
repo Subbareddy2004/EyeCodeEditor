@@ -9,6 +9,25 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+const LANGUAGE_CONFIG = {
+  cpp: {
+    label: 'C++',
+    template: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    return 0;\n}'
+  },
+  c: {
+    label: 'C',
+    template: '#include <stdio.h>\n\nint main() {\n    // Write your code here\n    return 0;\n}'
+  },
+  python: {
+    label: 'Python',
+    template: '# Write your code here'
+  },
+  java: {
+    label: 'Java',
+    template: 'public class Main {\n    public static void main(String[] args) {\n        // Write your code here\n    }\n}'
+  }
+};
+
 const AssignmentView = () => {
   const { assignmentId } = useParams();
   const navigate = useNavigate();
@@ -28,7 +47,8 @@ const AssignmentView = () => {
     { value: 'python', label: 'Python' },
     { value: 'javascript', label: 'JavaScript' },
     { value: 'java', label: 'Java' },
-    { value: 'cpp', label: 'C++' }
+    { value: 'cpp', label: 'C++' },
+    { value: 'c', label: 'C' }
   ];
 
   const handleCodeChange = (newCode) => {
@@ -37,16 +57,18 @@ const AssignmentView = () => {
   };
 
   const handleLanguageChange = (event) => {
-    setSelectedLanguage(event.target.value);
-    setCode('');
+    const newLanguage = event.target.value;
+    setSelectedLanguage(newLanguage);
+    setCode(LANGUAGE_CONFIG[newLanguage]?.template || '');
     setResults(null);
   };
 
   const handleProblemSelect = (problem) => {
     setSelectedProblem(problem);
-    setCode('');
+    const defaultLanguage = problem.language || 'python';
+    setSelectedLanguage(defaultLanguage);
+    setCode(LANGUAGE_CONFIG[defaultLanguage]?.template || '');
     setResults(null);
-    setSelectedLanguage(problem.language || 'python');
   };
 
   const handleSubmit = async () => {
@@ -126,6 +148,14 @@ const AssignmentView = () => {
       fetchAssignment();
     }
   }, [assignmentId, user.token]);
+
+  useEffect(() => {
+    if (selectedProblem) {
+      const defaultLanguage = selectedProblem.language || 'python';
+      setSelectedLanguage(defaultLanguage);
+      setCode(LANGUAGE_CONFIG[defaultLanguage]?.template || '');
+    }
+  }, [selectedProblem]);
 
   const isProblemSolved = (problemId) => {
     const problem = assignment?.problems?.find(p => p._id === problemId);
@@ -262,15 +292,15 @@ const AssignmentView = () => {
                     <select
                       value={selectedLanguage}
                       onChange={handleLanguageChange}
-                      className={`px-3 py-2 rounded-lg ${
+                      className={`px-3 py-1 rounded ${
                         darkMode 
-                          ? 'bg-[#1a1f2c] text-white border-[#2d3548]' 
-                          : 'bg-white text-gray-800 border-gray-300'
-                      } border`}
+                          ? 'bg-gray-700 text-white' 
+                          : 'bg-gray-100 text-gray-900'
+                      }`}
                     >
-                      {languages.map(lang => (
-                        <option key={lang.value} value={lang.value}>
-                          {lang.label}
+                      {Object.entries(LANGUAGE_CONFIG).map(([value, { label }]) => (
+                        <option key={value} value={value}>
+                          {label}
                         </option>
                       ))}
                     </select>

@@ -10,6 +10,9 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { getProblem, runCode } from '../../services/problemService';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
 import { eclipse } from '@uiw/codemirror-theme-eclipse';
+import axios from 'axios';
+import { API_URL } from '../../config/config';
+import { getAuthHeaders } from '../../utils/authUtils';
 
 // Language configuration
 const LANGUAGE_CONFIG = {
@@ -62,14 +65,51 @@ const PracticeProblem = () => {
   const handleRunCode = async () => {
     try {
       setLoading(true);
-      const result = await runCode(id, code, language);
-      setTestResults(result.results);
-      
-      if (result.allPassed) {
-        toast.success('All test cases passed! 🎉');
+      const response = await axios.post(
+        `${API_URL}/problems/student/problems/${problem._id}/run`,
+        {
+          code,
+          language
+        },
+        { headers: getAuthHeaders() }
+      );
+
+      // Show test results
+      setTestResults([{
+        passed: response.data.testCase.passed,
+        input: response.data.testCase.input,
+        expected: response.data.testCase.expectedOutput,
+        actual: response.data.testCase.actualOutput,
+        error: response.data.error
+      }]);
+
+      // Show success/error toast with output
+      if (response.data.testCase.passed) {
+        toast.success(
+          <div>
+            <p>All test cases passed! 🎉</p>
+            <p className="text-sm mt-1">Output: {response.data.output}</p>
+          </div>,
+          { duration: 4000 }
+        );
+      } else {
+        toast.error(
+          <div>
+            <p>Test case failed</p>
+            <p className="text-sm mt-1">Expected: {response.data.testCase.expectedOutput}</p>
+            <p className="text-sm">Got: {response.data.testCase.actualOutput}</p>
+          </div>,
+          { duration: 4000 }
+        );
       }
+
     } catch (error) {
-      toast.error('Failed to run code: ' + error.message);
+      console.error('Error running code:', error);
+      toast.error(error.response?.data?.message || 'Failed to run code');
+      setTestResults([{
+        passed: false,
+        error: error.response?.data?.message || 'Failed to run code'
+      }]);
     } finally {
       setLoading(false);
     }
@@ -131,21 +171,23 @@ const PracticeProblem = () => {
               {testResults.map((result, index) => (
                 <div
                   key={index}
-                  className={`p-3 rounded ${
+                  className={`p-4 rounded ${
                     result.passed ? 'bg-green-900/50' : 'bg-red-900/50'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <span>Test Case {index + 1}</span>
                     <span>{result.passed ? '✅ Passed' : '❌ Failed'}</span>
                   </div>
                   {!result.isHidden && (
-                    <div className="mt-2 text-sm">
-                      <p>Input: {result.input}</p>
-                      <p>Expected: {result.expected}</p>
-                      <p>Got: {result.actual}</p>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="font-medium">Input:</span> {result.input}</p>
+                      <p><span className="font-medium">Expected:</span> {result.expected}</p>
+                      <p><span className="font-medium">Got:</span> {result.actual}</p>
                       {result.error && (
-                        <p className="text-red-400">Error: {result.error}</p>
+                        <p className="text-red-400 mt-2">
+                          <span className="font-medium">Error:</span> {result.error}
+                        </p>
                       )}
                     </div>
                   )}

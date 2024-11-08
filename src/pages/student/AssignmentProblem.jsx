@@ -8,27 +8,23 @@ import { toast } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Language configuration with templates
+// Language configuration
 const LANGUAGE_CONFIG = {
   cpp: {
     label: 'C++',
-    template: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    return 0;\n}'
+    template: '#include <iostream>\nusing namespace std;\n\nint main() {\n    //Write your code here\n    return 0;\n}'
   },
   c: {
     label: 'C',
-    template: '#include <stdio.h>\n\nint main() {\n    // Write your C code here\n    return 0;\n}'
+    template: '#include <stdio.h>\n\nint main() {\n    //Write your code here\n    return 0;\n}'
   },
   python: {
     label: 'Python',
-    template: '# Write your Python code here\n\ndef solution():\n    # Your code here\n    pass\n\nif __name__ == "__main__":\n    solution()'
+    template: '# Write your code here'
   },
   java: {
     label: 'Java',
-    template: 'public class Solution {\n    public static void main(String[] args) {\n        // Write your Java code here\n    }\n}'
-  },
-  javascript: {
-    label: 'JavaScript',
-    template: '// Write your JavaScript code here\nfunction solution() {\n    // Your code here\n}\n'
+    template: 'public class Main {\n    public static void main(String[] args) {\n        //Write your code here\n    }\n}'
   }
 };
 
@@ -171,15 +167,16 @@ const AssignmentProblem = () => {
               <select
                 value={language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
-                className={`px-4 py-2 rounded ${
-                  darkMode ? 'bg-[#242b3d] text-white' : 'bg-white'
+                className={`px-3 py-1 rounded ${
+                  darkMode 
+                    ? 'bg-gray-700 text-white' 
+                    : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
-                  <option key={key} value={key}>
-                    {config.label}
-                  </option>
-                ))}
+                <option value="cpp">C++</option>
+                <option value="c">C</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
               </select>
 
               <button
