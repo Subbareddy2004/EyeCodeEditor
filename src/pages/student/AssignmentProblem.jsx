@@ -8,12 +8,36 @@ import { toast } from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Language configuration with templates
+const LANGUAGE_CONFIG = {
+  cpp: {
+    label: 'C++',
+    template: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    return 0;\n}'
+  },
+  c: {
+    label: 'C',
+    template: '#include <stdio.h>\n\nint main() {\n    // Write your C code here\n    return 0;\n}'
+  },
+  python: {
+    label: 'Python',
+    template: '# Write your Python code here\n\ndef solution():\n    # Your code here\n    pass\n\nif __name__ == "__main__":\n    solution()'
+  },
+  java: {
+    label: 'Java',
+    template: 'public class Solution {\n    public static void main(String[] args) {\n        // Write your Java code here\n    }\n}'
+  },
+  javascript: {
+    label: 'JavaScript',
+    template: '// Write your JavaScript code here\nfunction solution() {\n    // Your code here\n}\n'
+  }
+};
+
 const AssignmentProblem = () => {
   const { assignmentId, problemId } = useParams();
   const { darkMode } = useTheme();
   const [problem, setProblem] = useState(null);
   const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('py');
+  const [language, setLanguage] = useState('python');
   const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
   const [testResults, setTestResults] = useState([]);
@@ -22,55 +46,56 @@ const AssignmentProblem = () => {
     loadProblem();
   }, [assignmentId, problemId]);
 
+  // Load problem details
   const loadProblem = async () => {
     try {
-      const response = await axios.get(`${API_URL}/assignments/${assignmentId}/problems/${problemId}`);
+      const response = await axios.get(
+        `${API_URL}/assignments/${assignmentId}/problems/${problemId}`
+      );
       setProblem(response.data);
-      // Set default code template based on language
-      setCode(getDefaultCode(response.data.language));
+      // Set default code template based on selected language
+      setCode(LANGUAGE_CONFIG[language].template);
     } catch (error) {
       toast.error('Failed to load problem');
     }
   };
 
-  const getDefaultCode = (lang) => {
-    switch (lang) {
-      case 'py':
-        return '# Write your Python code here\n\n';
-      case 'cpp':
-        return '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    return 0;\n}';
-      case 'java':
-        return 'public class Solution {\n    public static void main(String[] args) {\n        // Write your Java code here\n    }\n}';
-      case 'js':
-        return '// Write your JavaScript code here\n\n';
-      default:
-        return '';
-    }
+  // Handle language change
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    setCode(LANGUAGE_CONFIG[newLanguage].template);
   };
 
+  // Handle code submission
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/assignments/${assignmentId}/submit`, {
-        problemId,
-        code,
-        language
-      });
+      const response = await axios.post(
+        `${API_URL}/assignments/${assignmentId}/problems/${problemId}/run`,
+        {
+          code,
+          language,
+          problemId
+        }
+      );
 
       setTestResults(response.data.results);
+      setOutput(response.data.output || '');
       
       if (response.data.status === 'PASSED') {
-        toast.success('All test cases passed!');
+        toast.success('All test cases passed! 🎉');
       } else {
         toast.error('Some test cases failed');
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to submit solution');
+      setOutput(error.response?.data?.error || 'Execution failed');
     } finally {
       setLoading(false);
     }
   };
 
+  // Loading state
   if (!problem) {
     return (
       <div className={`min-h-screen p-6 ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-100'}`}>
@@ -99,9 +124,31 @@ const AssignmentProblem = () => {
             <div className={`prose ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               {problem.description}
             </div>
+            
+            {/* Sample Test Cases */}
+            {problem.sampleInput && problem.sampleOutput && (
+              <div className="mt-6 space-y-4">
+                <div>
+                  <h3 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Sample Input:
+                  </h3>
+                  <pre className={`p-3 rounded ${darkMode ? 'bg-[#1a1f2c] text-gray-300' : 'bg-gray-50 text-gray-600'}`}>
+                    {problem.sampleInput}
+                  </pre>
+                </div>
+                <div>
+                  <h3 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                    Sample Output:
+                  </h3>
+                  <pre className={`p-3 rounded ${darkMode ? 'bg-[#1a1f2c] text-gray-300' : 'bg-gray-50 text-gray-600'}`}>
+                    {problem.sampleOutput}
+                  </pre>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Code Editor */}
+          {/* Code Editor Section */}
           <div className="space-y-4">
             <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
               <Editor
@@ -119,18 +166,20 @@ const AssignmentProblem = () => {
               />
             </div>
 
+            {/* Controls */}
             <div className="flex justify-between">
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                onChange={(e) => handleLanguageChange(e.target.value)}
                 className={`px-4 py-2 rounded ${
                   darkMode ? 'bg-[#242b3d] text-white' : 'bg-white'
                 }`}
               >
-                <option value="py">Python</option>
-                <option value="cpp">C++</option>
-                <option value="java">Java</option>
-                <option value="js">JavaScript</option>
+                {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
+                  <option key={key} value={key}>
+                    {config.label}
+                  </option>
+                ))}
               </select>
 
               <button
@@ -140,7 +189,7 @@ const AssignmentProblem = () => {
                   darkMode
                     ? 'bg-blue-600 hover:bg-blue-700'
                     : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
+                } text-white disabled:opacity-50`}
               >
                 {loading ? (
                   <>
@@ -170,9 +219,18 @@ const AssignmentProblem = () => {
                         darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
                       }`}
                     >
-                      <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                        Test Case {index + 1}
-                      </span>
+                      <div>
+                        <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                          Test Case {index + 1}
+                        </span>
+                        {!result.isHidden && (
+                          <div className="text-sm mt-1">
+                            <div>Input: {result.input}</div>
+                            <div>Expected: {result.expected}</div>
+                            <div>Output: {result.actual}</div>
+                          </div>
+                        )}
+                      </div>
                       {result.passed ? (
                         <FaCheck className="text-green-500" />
                       ) : (
@@ -204,4 +262,4 @@ const AssignmentProblem = () => {
   );
 };
 
-export default AssignmentProblem; 
+export default AssignmentProblem;
