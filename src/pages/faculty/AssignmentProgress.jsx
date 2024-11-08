@@ -20,12 +20,23 @@ const AssignmentProgress = () => {
 
   const loadProgress = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}/assignments/faculty/${assignmentId}`,
-        { headers: { Authorization: `Bearer ${user.token}` } }
-      );
-      setAssignment(response.data);
+      const [assignmentRes, submissionsRes] = await Promise.all([
+        axios.get(
+          `${API_URL}/faculty/assignments/${assignmentId}`,
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        ),
+        axios.get(
+          `${API_URL}/faculty/assignments/${assignmentId}/submissions`,
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        )
+      ]);
+
+      setAssignment({
+        ...assignmentRes.data,
+        studentSubmissions: submissionsRes.data
+      });
     } catch (error) {
+      console.error('Error:', error);
       toast.error('Failed to load submission data');
     } finally {
       setLoading(false);
@@ -73,7 +84,7 @@ const AssignmentProgress = () => {
             </thead>
             <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
               {assignment?.studentSubmissions?.map((submission, index) => (
-                <tr key={index} className={darkMode ? 'bg-[#242b3d]' : 'bg-white'}>
+                <tr key={submission.student.email} className={darkMode ? 'bg-[#242b3d]' : 'bg-white'}>
                   <td className="px-6 py-4">
                     <div className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                       {submission.student.name}
@@ -92,13 +103,19 @@ const AssignmentProgress = () => {
                     </span>
                   </td>
                   <td className={`px-6 py-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    {submission.problemsCompleted}
+                    {`${submission.problemsCompleted} / ${submission.totalProblems}`}
                   </td>
                   <td className={`px-6 py-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    {submission.lastSubmission}
+                    {submission.lastSubmission 
+                      ? new Date(submission.lastSubmission).toLocaleString()
+                      : 'No submission yet'}
                   </td>
-                  <td className={`px-6 py-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                    {submission.score}
+                  <td className={`px-6 py-4 text-sm ${
+                    submission.score >= 70 
+                      ? 'text-green-500' 
+                      : darkMode ? 'text-gray-300' : 'text-gray-500'
+                  }`}>
+                    {`${submission.score}%`}
                   </td>
                 </tr>
               ))}

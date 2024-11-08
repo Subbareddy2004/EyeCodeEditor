@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FaUsers, FaCode, FaBookOpen, FaClock, FaTrophy, 
-  FaGraduationCap, FaChalkboardTeacher, FaClipboardList 
-} from 'react-icons/fa';
-import { getDashboardStats } from '../../services/adminService';
-import { toast } from 'react-hot-toast';
+import axios from 'axios';
+import { getAuthHeaders } from '../../utils/authUtils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { FaGraduationCap, FaChalkboardTeacher, FaCode, FaTrophy, FaClipboardList } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
+import { toast } from 'react-hot-toast';
 import Loader from '../../components/Loader';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const Dashboard = () => {
   const { darkMode } = useTheme();
@@ -17,22 +17,41 @@ const Dashboard = () => {
     totalFaculty: 0,
     totalProblems: 0,
     totalContests: 0,
-    totalAssignments: 0,
     totalSubmissions: 0,
-    usageStats: []
+    totalAssignments: 0
   });
+  const [usageStats, setUsageStats] = useState([]);
 
   useEffect(() => {
-    fetchStats();
+    fetchDashboardStats();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchDashboardStats = async () => {
     try {
       setLoading(true);
-      const data = await getDashboardStats();
-      setStats(data);
+      const response = await axios.get(
+        `${API_URL}/admin/dashboard`,
+        { headers: getAuthHeaders() }
+      );
+      
+      setStats({
+        totalStudents: response.data.stats.totalStudents || 0,
+        totalFaculty: response.data.stats.totalFaculty || 0,
+        totalProblems: response.data.stats.totalProblems || 0,
+        totalContests: response.data.stats.totalContests || 0,
+        totalSubmissions: response.data.stats.totalSubmissions || 0,
+        totalAssignments: response.data.stats.totalAssignments || 0
+      });
+      
+      // Format dates for the chart
+      const formattedStats = response.data.usageStats.map(stat => ({
+        ...stat,
+        name: new Date(stat.name).toLocaleDateString()
+      }));
+      setUsageStats(formattedStats);
     } catch (error) {
-      toast.error(error.message || 'Failed to fetch dashboard stats');
+      console.error('Error fetching dashboard stats:', error);
+      toast.error('Failed to load dashboard statistics');
     } finally {
       setLoading(false);
     }
@@ -43,9 +62,7 @@ const Dashboard = () => {
       <div className={`min-h-screen p-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} 
         flex flex-col items-center justify-center`}>
         <Loader size="large" />
-        <p className={`mt-4 text-lg ${
-          darkMode ? 'text-gray-400' : 'text-gray-600'
-        }`}>
+        <p className={`mt-4 text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
           Loading dashboard data...
         </p>
       </div>
@@ -104,19 +121,17 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Charts */}
-      <div className={`${
-        darkMode ? 'bg-gray-800' : 'bg-white'
-      } rounded-lg shadow-md p-6 mb-8`}>
+      {/* Usage Statistics Chart */}
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
         <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
           Platform Usage Statistics
         </h2>
         <div className="overflow-x-auto">
-          {stats.usageStats.length > 0 ? (
+          {usageStats.length > 0 ? (
             <BarChart 
               width={800} 
               height={400} 
-              data={stats.usageStats}
+              data={usageStats}
               className={darkMode ? 'text-white' : ''}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
@@ -137,9 +152,7 @@ const Dashboard = () => {
               <Bar dataKey="avgExecutionTime" fill="#82ca9d" name="Avg. Execution Time (ms)" />
             </BarChart>
           ) : (
-            <div className={`text-center py-8 ${
-              darkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
+            <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               No usage statistics available
             </div>
           )}

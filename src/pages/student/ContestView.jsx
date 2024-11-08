@@ -4,6 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FaCheckCircle, FaClock } from 'react-icons/fa';
 import CodeEditor from '../../components/CodeEditor';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const LANGUAGE_CONFIG = {
   cpp: {
@@ -35,6 +36,7 @@ const ContestView = () => {
   const [loading, setLoading] = useState(false);
   const [testResults, setTestResults] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     fetchContest();
@@ -44,6 +46,13 @@ const ContestView = () => {
     if (started) {
       const timer = setInterval(updateTimeLeft, 1000);
       return () => clearInterval(timer);
+    }
+  }, [started]);
+
+  useEffect(() => {
+    if (started) {
+      const interval = setInterval(fetchContest, 30000);
+      return () => clearInterval(interval);
     }
   }, [started]);
 
@@ -100,10 +109,8 @@ const ContestView = () => {
   };
 
   const handleRunCode = async () => {
-    if (!selectedProblem || !code.trim()) return;
-    
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await axios.post(
         `/contests/${id}/problems/${selectedProblem.problem._id}/run`,
         {
@@ -116,11 +123,9 @@ const ContestView = () => {
         setTestResults(response.data.results);
         setOutput(response.data.results[0]?.actual || '');
         
-        const allPassed = response.data.results.every(r => r.passed);
-        if (allPassed) {
-          toast.success('All test cases passed! 🎉');
+        if (response.data.allPassed) {
           await handleProblemComplete();
-          await fetchContest(); // Refresh contest data to update UI
+          await fetchContest();
         }
       }
     } catch (error) {
@@ -134,15 +139,23 @@ const ContestView = () => {
 
   const handleProblemComplete = async () => {
     try {
+      console.log('Completing problem:', selectedProblem.problem._id);
       const response = await axios.post(
         `/contests/${id}/problems/${selectedProblem.problem._id}/complete`,
-        { code }
+        { 
+          code,
+          problemId: selectedProblem.problem._id,
+          userId: localStorage.getItem('userId')
+        }
       );
-      setContest(response.data);
       
-      toast.success('Problem marked as completed!');
+      if (response.data) {
+        setContest(response.data);
+        toast.success('Problem completed successfully! 🎉');
+      }
     } catch (error) {
-      toast.error('Error updating problem status');
+      console.error('Error completing problem:', error);
+      toast.error('Failed to mark problem as completed');
     }
   };
 
@@ -152,46 +165,46 @@ const ContestView = () => {
   };
 
   const calculateProgress = () => {
-    if (!contest || !contest.participants) return { solved: 0, totalPoints: 0 };
-    
-    const participant = contest.participants.find(
+    const participant = contest?.participants?.find(
       p => p.student._id === localStorage.getItem('userId')
     );
-    
-    if (!participant) return { solved: 0, totalPoints: 0 };
-    
-    return {
-      solved: participant.completedProblems.length,
-      totalPoints: participant.totalPoints
-    };
+
+    if (!participant) {
+      return { solved: 0, totalPoints: 0 };
+    }
+
+    const solved = participant.completedProblems?.length || 0;
+    const totalPoints = participant.totalPoints || 0;
+
+    return { solved, totalPoints };
   };
 
   const isProblemCompleted = (problemId) => {
-    if (!contest || !contest.participants) return false;
-    
-    const participant = contest.participants.find(
+    const participant = contest?.participants?.find(
       p => p.student._id === localStorage.getItem('userId')
     );
-    
-    return participant?.completedProblems.includes(problemId);
+
+    return participant?.completedProblems?.includes(problemId) || false;
   };
 
   if (!contest) return <div>Loading...</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="bg-gray-800 rounded-lg p-6">
+    <div className={`container mx-auto p-4 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+      <div className={`rounded-lg p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-white">{contest.title}</h2>
-            <div className="text-gray-400 mt-2">
+            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              {contest.title}
+            </h2>
+            <div className={`mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               <p>Problems ({calculateProgress().solved}/{contest.problems.length} Solved)</p>
               <p>Total Points: {calculateProgress().totalPoints}/{contest.problems.reduce((sum, p) => sum + p.points, 0)}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             {timeLeft && (
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 <FaClock />
                 <span>{timeLeft}</span>
               </div>
@@ -216,7 +229,10 @@ const ContestView = () => {
                   key={problem.problem._id}
                   className={`p-3 rounded-lg cursor-pointer transition-colors
                     ${selectedProblem?.problem._id === problem.problem._id ? 'ring-2 ring-blue-500' : ''}
-                    ${isCompleted ? 'bg-green-800 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-600'}`}
+                    ${isCompleted 
+                      ? isDarkMode ? 'bg-green-800 hover:bg-green-700' : 'bg-green-100 hover:bg-green-200'
+                      : isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
                   onClick={() => handleProblemSelect(problem)}
                 >
                   <div className="flex items-center justify-between">
@@ -226,7 +242,7 @@ const ContestView = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span>{problem.points} pts</span>
-                      {isCompleted && <FaCheckCircle className="text-green-400" />}
+                      {isCompleted && <FaCheckCircle className={isDarkMode ? 'text-green-400' : 'text-green-600'} />}
                     </div>
                   </div>
                 </div>
@@ -237,18 +253,43 @@ const ContestView = () => {
           <div className="md:col-span-2">
             {selectedProblem ? (
               <div className="space-y-4">
-                <div className="bg-gray-700 rounded-lg p-4">
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                <div className={`rounded-lg p-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                  <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {selectedProblem.problem.title}
                   </h3>
-                  <p className="text-gray-300">{selectedProblem.problem.description}</p>
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {selectedProblem.problem.description}
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className={`p-3 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                      <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Sample Input:
+                      </h4>
+                      <pre className={`whitespace-pre-wrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {selectedProblem.problem.sampleInput || 'No sample input provided'}
+                      </pre>
+                    </div>
+                    <div className={`p-3 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                      <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Sample Output:
+                      </h4>
+                      <pre className={`whitespace-pre-wrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {selectedProblem.problem.sampleOutput || 'No sample output provided'}
+                      </pre>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <select
                     value={language}
                     onChange={(e) => handleLanguageChange(e.target.value)}
-                    className="bg-gray-700 text-white px-3 py-2 rounded"
+                    className={`px-3 py-2 rounded ${
+                      isDarkMode 
+                        ? 'bg-gray-700 text-white' 
+                        : 'bg-gray-200 text-gray-900'
+                    }`}
                   >
                     {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
                       <option key={key} value={key}>
@@ -259,7 +300,11 @@ const ContestView = () => {
                   <button
                     onClick={handleRunCode}
                     disabled={loading}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+                    className={`px-4 py-2 rounded ${
+                      loading
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600'
+                    } text-white`}
                   >
                     {loading ? 'Running...' : 'Run Code'}
                   </button>
@@ -269,43 +314,22 @@ const ContestView = () => {
                   value={code}
                   onChange={setCode}
                   language={language}
-                  className="h-64"
+                  theme={isDarkMode ? 'vs-dark' : 'light'}
                 />
 
                 {output && (
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h4 className="text-lg font-semibold text-white mb-2">Output:</h4>
-                    <pre className="text-gray-300 whitespace-pre-wrap">{output}</pre>
-                  </div>
-                )}
-
-                {testResults && (
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-semibold text-white">Test Results:</h4>
-                    {testResults.map((result, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded ${
-                          result.passed ? 'bg-green-900' : 'bg-red-900'
-                        }`}
-                      >
-                        <div className="flex justify-between">
-                          <span>Test Case {index + 1}</span>
-                          <span>{result.passed ? 'Passed' : 'Failed'}</span>
-                        </div>
-                        {!result.passed && (
-                          <div className="mt-2 text-sm">
-                            <div>Expected: {result.expected}</div>
-                            <div>Got: {result.actual}</div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                  <div className={`mt-4 p-4 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Output:
+                    </h4>
+                    <pre className={`whitespace-pre-wrap ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {output}
+                    </pre>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className={`flex items-center justify-center h-full ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 Select a problem to begin
               </div>
             )}

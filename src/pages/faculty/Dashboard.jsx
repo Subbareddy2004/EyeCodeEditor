@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaTrophy, FaPlay, FaCode, FaUsers } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
+import { toast } from 'react-toastify';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -38,8 +39,16 @@ const Dashboard = () => {
         totalSubmissions: response.data.stats.submissionCount || 0,
         totalStudents: response.data.stats.studentCount || 0
       });
+      
+      // Format submission stats for the chart
+      const formattedStats = response.data.submissionStats.map(stat => ({
+        name: new Date(stat.name).toLocaleDateString(),
+        count: stat.count
+      }));
+      setSubmissionData(formattedStats);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
+      toast.error('Failed to load dashboard statistics');
     } finally {
       setLoading(false);
     }
