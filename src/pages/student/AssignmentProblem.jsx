@@ -33,17 +33,20 @@ const AssignmentProblem = () => {
   const { darkMode } = useTheme();
   const [problem, setProblem] = useState(null);
   const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('python');
+  const [language, setLanguage] = useState('cpp');
   const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
   const [testResults, setTestResults] = useState([]);
+  const [submission, setSubmission] = useState(null);
+  const [isRunMode, setIsRunMode] = useState(true);
 
   useEffect(() => {
-    loadProblem();
+    fetchProblem();
+    fetchLastSubmission();
   }, [assignmentId, problemId]);
 
   // Load problem details
-  const loadProblem = async () => {
+  const fetchProblem = async () => {
     try {
       const response = await axios.get(
         `${API_URL}/assignments/${assignmentId}/problems/${problemId}`
@@ -59,11 +62,63 @@ const AssignmentProblem = () => {
   // Handle language change
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage);
-    setCode(LANGUAGE_CONFIG[newLanguage].template);
+    if (!code || code === '') {
+      setDefaultTemplate(newLanguage);
+    }
   };
 
-  // Handle code submission
-  const handleSubmit = async () => {
+  // Add this function to fetch the last submission
+  const fetchLastSubmission = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/submissions/assignment/${assignmentId}/problem/${problemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      
+      if (response.data && response.data.code) {
+        setCode(response.data.code);
+        setLanguage(response.data.language);
+      }
+    } catch (error) {
+      console.error('Error fetching last submission:', error);
+    }
+  };
+
+  // Add a new function for running code without submitting
+  const handleRun = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${API_URL}/code/run`,
+        {
+          code,
+          language,
+          input: problem.sampleInput
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      setOutput(response.data.output || '');
+      toast.success('Code executed successfully!');
+    } catch (error) {
+      setOutput(error.response?.data?.error || 'Execution failed');
+      toast.error('Failed to run code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modify handleSubmit to prevent page refresh
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent form submission
     try {
       setLoading(true);
       const response = await axios.post(
@@ -72,8 +127,16 @@ const AssignmentProblem = () => {
           code,
           language,
           problemId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
         }
       );
+
+      // Save submission
+      await saveSubmission(response.data.status === 'PASSED');
 
       setTestResults(response.data.results);
       setOutput(response.data.output || '');
@@ -88,6 +151,27 @@ const AssignmentProblem = () => {
       setOutput(error.response?.data?.error || 'Execution failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add this function to save submissions
+  const saveSubmission = async (passed) => {
+    try {
+      await axios.post(
+        `${API_URL}/submissions/assignment/${assignmentId}/problem/${problemId}`,
+        {
+          code,
+          language,
+          status: passed ? 'PASSED' : 'FAILED'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error saving submission:', error);
     }
   };
 
@@ -163,7 +247,7 @@ const AssignmentProblem = () => {
             </div>
 
             {/* Controls */}
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center gap-4">
               <select
                 value={language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
@@ -179,27 +263,42 @@ const AssignmentProblem = () => {
                 <option value="java">Java</option>
               </select>
 
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className={`px-6 py-2 rounded-lg flex items-center ${
-                  darkMode
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-blue-500 hover:bg-blue-600'
-                } text-white disabled:opacity-50`}
-              >
-                {loading ? (
-                  <>
-                    <FaPlay className="animate-spin mr-2" />
-                    Running...
-                  </>
-                ) : (
-                  <>
-                    <FaPlay className="mr-2" />
-                    Run & Submit
-                  </>
-                )}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRun}
+                  disabled={loading}
+                  className={`px-4 py-2 rounded-lg flex items-center ${
+                    darkMode
+                      ? 'bg-green-600 hover:bg-green-700'
+                      : 'bg-green-500 hover:bg-green-600'
+                  } text-white disabled:opacity-50`}
+                >
+                  <FaPlay className="mr-2" />
+                  Run
+                </button>
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className={`px-6 py-2 rounded-lg flex items-center ${
+                    darkMode
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  } text-white disabled:opacity-50`}
+                >
+                  {loading ? (
+                    <>
+                      <FaPlay className="animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck className="mr-2" />
+                      Submit
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Test Results */}

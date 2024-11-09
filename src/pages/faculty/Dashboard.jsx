@@ -165,7 +165,7 @@ const Dashboard = () => {
                   </Link>
                   <Link to="/faculty/students"
                     className="block w-full p-3 text-center text-white bg-purple-500 rounded-lg hover:bg-purple-600">
-                    View Student Progress
+                    View Students
                   </Link>
                 </div>
               </div>

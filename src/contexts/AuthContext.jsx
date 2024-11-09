@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await loginApi(email, password);
       const userData = response.user;
+      localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       return userData;
     } catch (error) {
@@ -42,7 +43,12 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout,
+      userId: user?._id || user?.id 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,6 +5,8 @@ import { toast } from 'react-hot-toast';
 import { FaCheckCircle, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import CodeEditor from '../../components/CodeEditor';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const LANGUAGE_CONFIG = {
   c: {
@@ -42,10 +44,48 @@ const ContestView = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [error, setError] = useState('');
   const { isDarkMode } = useTheme();
+  const [problemsSolved, setProblemsSolved] = useState(0);
+  const [totalPoints, setTotalPoints] = useState(0);
+  const { user, userId } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchContest();
-  }, [id]);
+    if (!userId) {
+      console.warn('No authenticated user found');
+      toast.error('Please login to view contest details');
+      navigate('/login');
+      return;
+    }
+
+    const fetchContestData = async () => {
+      try {
+        const response = await axios.get(`/contests/${id}`);
+        setContest(response.data);
+        
+        console.log('Current userId:', userId);
+        console.log('All participants:', response.data.participants);
+        
+        const participant = response.data.participants?.find(
+          p => p.student._id === userId
+        );
+        
+        if (participant) {
+          console.log('Found participant data:', participant);
+          setProblemsSolved(participant.completedProblems?.length || 0);
+          setTotalPoints(participant.totalPoints || 0);
+        } else {
+          console.log('No participant found for userId:', userId);
+          setProblemsSolved(0);
+          setTotalPoints(0);
+        }
+      } catch (error) {
+        console.error('Error fetching contest:', error);
+        toast.error('Error fetching contest details');
+      }
+    };
+
+    fetchContestData();
+  }, [userId]);
 
   useEffect(() => {
     if (started) {
@@ -67,12 +107,12 @@ const ContestView = () => {
       setContest(response.data);
       
       const participant = response.data.participants?.find(
-        p => p.student?._id === localStorage.getItem('userId')
+        p => p.student._id === localStorage.getItem('userId')
       );
       
       if (participant) {
-        setStarted(true);
-        updateTimeLeft(participant.startTime);
+        setProblemsSolved(participant.completedProblems?.length || 0);
+        setTotalPoints(participant.totalPoints || 0);
       }
     } catch (error) {
       toast.error('Error fetching contest');
@@ -106,68 +146,93 @@ const ContestView = () => {
     }
   };
 
-  const handleProblemSelect = (problem) => {
+  const fetchLastSubmission = async (problemId) => {
+    try {
+      const response = await axios.get(`/contests/${id}/problems/${problemId}/submissions`);
+      if (response.data && response.data.code) {
+        setCode(response.data.code);
+        setLanguage(response.data.language);
+      } else {
+        setCode(LANGUAGE_CONFIG[language].template);
+      }
+    } catch (error) {
+      console.error('Error fetching submission:', error);
+      setCode(LANGUAGE_CONFIG[language].template);
+    }
+  };
+
+  const handleProblemSelect = async (problem) => {
     setSelectedProblem(problem);
-    setCode(LANGUAGE_CONFIG[language].template);
+    await fetchLastSubmission(problem.problem._id);
     setOutput('');
     setTestResults(null);
   };
 
   const handleRunCode = async () => {
+    if (!userId) {
+      toast.error('Please login to submit solutions');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
-      const response = await axios.post(
+      
+      const runResponse = await axios.post(
         `/contests/${id}/problems/${selectedProblem.problem._id}/run`,
-        {
-          code,
-          language
-        }
+        { code, language }
       );
 
-      if (response.data.results) {
-        setTestResults(response.data.results);
-        setOutput(response.data.results[0]?.actual || '');
+      console.log('Run response:', runResponse.data);
+
+      if (runResponse.data.results) {
+        setTestResults(runResponse.data.results);
+        setOutput(runResponse.data.results[0]?.actual || '');
         
-        const compilationError = response.data.results[0]?.error;
-        if (compilationError) {
-          setError(compilationError);
-        }
-        
-        if (response.data.allPassed) {
-          await handleProblemComplete();
-          await fetchContest();
+        if (runResponse.data.allPassed) {
+          await axios.post(
+            `/contests/${id}/problems/${selectedProblem.problem._id}/store-submission`,
+            { code, language, status: 'PASSED' }
+          );
+
+          const completeResponse = await axios.post(
+            `/contests/${id}/problems/${selectedProblem.problem._id}/complete`,
+            { code, problemId: selectedProblem.problem._id }
+          );
+
+          console.log('Complete response:', completeResponse.data);
+
+          if (completeResponse.data) {
+            setContest(completeResponse.data);
+            const updatedParticipant = completeResponse.data.participants?.find(
+              p => p.student._id === userId
+            );
+            
+            console.log('Updated participant data:', updatedParticipant);
+            
+            if (updatedParticipant) {
+              const newProblemsSolved = updatedParticipant.completedProblems?.length || 0;
+              const newTotalPoints = updatedParticipant.totalPoints || 0;
+              
+              console.log('Updating state to:', {
+                problemsSolved: newProblemsSolved,
+                totalPoints: newTotalPoints
+              });
+              
+              setProblemsSolved(newProblemsSolved);
+              setTotalPoints(newTotalPoints);
+            }
+          }
+
+          toast.success('Problem completed successfully! 🎉');
         }
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error running code';
-      setOutput('');
-      setError(errorMessage);
-      toast.error(errorMessage);
+      console.error('Error running code:', error);
+      setError(error.response?.data?.message || 'Error running code');
+      toast.error('Failed to run code');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleProblemComplete = async () => {
-    try {
-      console.log('Completing problem:', selectedProblem.problem._id);
-      const response = await axios.post(
-        `/contests/${id}/problems/${selectedProblem.problem._id}/complete`,
-        { 
-          code,
-          problemId: selectedProblem.problem._id,
-          userId: localStorage.getItem('userId')
-        }
-      );
-      
-      if (response.data) {
-        setContest(response.data);
-        toast.success('Problem completed successfully! 🎉');
-      }
-    } catch (error) {
-      console.error('Error completing problem:', error);
-      toast.error('Failed to mark problem as completed');
     }
   };
 
@@ -193,11 +258,17 @@ const ContestView = () => {
 
   const isProblemCompleted = (problemId) => {
     const participant = contest?.participants?.find(
-      p => p.student._id === localStorage.getItem('userId')
+      p => p.student._id === userId
     );
-
     return participant?.completedProblems?.includes(problemId) || false;
   };
+
+  useEffect(() => {
+    console.log('State updated:', {
+      problemsSolved,
+      totalPoints
+    });
+  }, [problemsSolved, totalPoints]);
 
   if (!contest) return <div>Loading...</div>;
 
@@ -208,10 +279,12 @@ const ContestView = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {contest.title}
+                {contest?.title}
               </h2>
-              <div className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                <p>Total Problems: {contest.problems.length}</p>
+              <div className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} key={`${problemsSolved}-${totalPoints}`}>
+                <p>Total Problems: {contest?.problems?.length || 0}</p>
+                <p>Problems Solved: {problemsSolved} / {contest?.problems?.length || 0}</p>
+                {/* <p>Total Points: {totalPoints}</p> */}
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -229,12 +302,13 @@ const ContestView = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              {contest.problems.map((problem, index) => {
+              {contest?.problems?.map((problem, index) => {
                 const isCompleted = isProblemCompleted(problem.problem._id);
                 return (
                   <div
                     key={problem.problem._id}
                     className={`p-3 rounded-lg cursor-pointer transition-colors
+                      ${isCompleted ? 'border-l-4 border-green-500' : ''}
                       ${selectedProblem?.problem._id === problem.problem._id 
                         ? isDarkMode ? 'bg-blue-900 text-blue-100' : 'bg-blue-100 text-blue-800'
                         : isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}
@@ -244,6 +318,11 @@ const ContestView = () => {
                       <div className={isDarkMode ? 'text-gray-200' : 'text-gray-800'}>
                         <span>Problem {index + 1}: </span>
                         <span>{problem.problem.title}</span>
+                        {isCompleted && (
+                          <span className="ml-2 text-green-500">
+                            <FaCheckCircle className="inline-block" /> Completed
+                          </span>
+                        )}
                       </div>
                       <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
                         {problem.points} pts

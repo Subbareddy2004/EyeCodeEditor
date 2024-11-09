@@ -65,11 +65,27 @@ const AssignmentView = () => {
     setResults(null);
   };
 
-  const handleProblemSelect = (problem) => {
+  const fetchLastSubmission = async (problemId) => {
+    try {
+      const response = await axios.get(`${API_URL}/assignments/${assignmentId}/submissions/${problemId}`);
+      if (response.data && response.data.code) {
+        setCode(response.data.code);
+        setSelectedLanguage(response.data.language);
+      } else {
+        // Set default template if no submission exists
+        setCode(LANGUAGE_CONFIG[selectedLanguage]?.template || '');
+      }
+    } catch (error) {
+      console.error('Error fetching submission:', error);
+      setCode(LANGUAGE_CONFIG[selectedLanguage]?.template || '');
+    }
+  };
+
+  const handleProblemSelect = async (problem) => {
     setSelectedProblem(problem);
     const defaultLanguage = problem.language || 'python';
     setSelectedLanguage(defaultLanguage);
-    setCode(LANGUAGE_CONFIG[defaultLanguage]?.template || '');
+    await fetchLastSubmission(problem._id);
     setResults(null);
   };
 
@@ -90,6 +106,9 @@ const AssignmentView = () => {
         language: selectedLanguage
       });
 
+      // Store submission regardless of result
+      await storeSubmission(selectedProblem._id, code, selectedLanguage, response.data.success);
+      
       setResults(response.data);
       
       if (response.data.results) {
@@ -114,6 +133,19 @@ const AssignmentView = () => {
     }
   };
 
+  const storeSubmission = async (problemId, code, language, passed) => {
+    try {
+      await axios.post(`${API_URL}/assignments/${assignmentId}/store-submission`, {
+        problemId,
+        code,
+        language,
+        status: passed ? 'PASSED' : 'FAILED'
+      });
+    } catch (error) {
+      console.error('Error storing submission:', error);
+    }
+  };
+
   const loadAssignment = async () => {
     try {
       setLoading(true);
@@ -127,6 +159,7 @@ const AssignmentView = () => {
         console.log('Selected problem:', firstProblem);
         setSelectedProblem(firstProblem);
         setSelectedLanguage(firstProblem.language || 'python');
+        await fetchLastSubmission(firstProblem._id);
       }
     } catch (error) {
       console.error('Error loading assignment:', error);
