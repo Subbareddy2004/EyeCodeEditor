@@ -58,6 +58,30 @@ const ContestManagement = () => {
     }
   };
 
+  const handleProblemComplete = async (contestId, problemId, code) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/contests/${contestId}/problems/${problemId}/complete`,
+        {
+          code,
+          problemId
+        },
+        { headers: getAuthHeaders() }
+      );
+      
+      if (response.data.success) {
+        toast.success('Problem completed successfully!');
+        // Refresh contest data
+        await fetchContests();
+      } else {
+        toast.error(response.data.message || 'Failed to complete problem');
+      }
+    } catch (error) {
+      console.error('Error completing problem:', error);
+      toast.error(error.response?.data?.message || 'Error completing problem');
+    }
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen p-6 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
