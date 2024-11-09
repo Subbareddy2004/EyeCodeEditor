@@ -254,6 +254,168 @@ const StudentManagement = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setNewStudent({
+      name: student.name,
+      email: student.email,
+      regNumber: student.regNumber
+    });
+    setShowEditForm(true);
+  };
+
+  const handleDelete = async (studentId) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) return;
+    
+    setActionLoading(`delete-${studentId}`);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/faculty/students/${studentId}`,
+        { headers: getAuthHeaders() }
+      );
+      toast.success('Student deleted successfully');
+      fetchStudents();
+    } catch (error) {
+      toast.error('Error deleting student');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setActionLoading(`edit-${editingStudent._id}`);
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/faculty/students/${editingStudent._id}`,
+        newStudent,
+        { headers: getAuthHeaders() }
+      );
+      
+      toast.success('Student updated successfully');
+      setShowEditForm(false);
+      setEditingStudent(null);
+      setNewStudent({ name: '', email: '', regNumber: '' });
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error updating student');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  // Add this component for the edit form
+  const EditStudentForm = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className={`${
+        darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
+      } rounded-lg p-6 w-full max-w-md`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={`text-xl font-bold ${
+            darkMode ? 'text-white' : 'text-gray-800'
+          }`}>Edit Student</h2>
+          <button 
+            onClick={() => {
+              setShowEditForm(false);
+              setEditingStudent(null);
+            }} 
+            className={`${
+              darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <FaTimes />
+          </button>
+        </div>
+        
+        <form onSubmit={handleEditSubmit}>
+          <div className="mb-4">
+            <label className={`block text-sm font-bold mb-2 ${
+              darkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>Name</label>
+            <input
+              type="text"
+              value={newStudent.name}
+              onChange={(e) => setNewStudent(prev => ({
+                ...prev,
+                name: e.target.value
+              }))}
+              className={`w-full p-2 border rounded ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                  : 'border-gray-300'
+              }`}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className={`block text-sm font-bold mb-2 ${
+              darkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>Email</label>
+            <input
+              type="email"
+              value={newStudent.email}
+              onChange={(e) => setNewStudent(prev => ({
+                ...prev,
+                email: e.target.value
+              }))}
+              className={`w-full p-2 border rounded ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                  : 'border-gray-300'
+              }`}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className={`block text-sm font-bold mb-2 ${
+              darkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>Registration Number</label>
+            <input
+              type="text"
+              value={newStudent.regNumber}
+              onChange={(e) => setNewStudent(prev => ({
+                ...prev,
+                regNumber: e.target.value
+              }))}
+              className={`w-full p-2 border rounded ${
+                darkMode 
+                  ? 'bg-[#1a1f2c] border-gray-600 text-white' 
+                  : 'border-gray-300'
+              }`}
+              required
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowEditForm(false);
+                setEditingStudent(null);
+              }}
+              className={`px-4 py-2 rounded ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={actionLoading === `edit-${editingStudent?._id}`}
+              className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 disabled:opacity-50"
+            >
+              {actionLoading === `edit-${editingStudent?._id}` ? 'Updating...' : 'Update Student'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   // Add table to display students
   const renderStudentsTable = () => (
     <div className={`rounded-lg shadow overflow-hidden ${
@@ -309,15 +471,27 @@ const StudentManagement = () => {
                     <FaKey />
                   )}
                 </button>
-                <button className={`${
-                  darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-900'
-                } mr-3`}>
+                <button 
+                  onClick={() => handleEdit(student)}
+                  disabled={actionLoading.startsWith('delete-') || actionLoading.startsWith('reset-')}
+                  className={`${
+                    darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-900'
+                  } mr-3`}
+                >
                   <FaEdit />
                 </button>
-                <button className={`${
-                  darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-900'
-                }`}>
-                  <FaTrash />
+                <button 
+                  onClick={() => handleDelete(student._id)}
+                  disabled={actionLoading === `delete-${student._id}`}
+                  className={`${
+                    darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-900'
+                  } disabled:opacity-50`}
+                >
+                  {actionLoading === `delete-${student._id}` ? (
+                    <FaSpinner className="animate-spin" />
+                  ) : (
+                    <FaTrash />
+                  )}
                 </button>
               </td>
             </tr>
@@ -386,6 +560,8 @@ const StudentManagement = () => {
           darkMode={darkMode}
         />
       )}
+
+      {showEditForm && <EditStudentForm />}
 
       {students.length === 0 ? (
         <div className="text-center py-12">
