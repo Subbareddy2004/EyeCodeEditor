@@ -38,7 +38,7 @@ const Dashboard = () => {
         totalSubmissions: response.data.stats.totalSubmissions || 0,
         successRate: response.data.stats.successRate || 0
       });
-      
+      console.log(response.data);
       setSubmissionData(response.data.submissionStats);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -146,9 +146,9 @@ const Dashboard = () => {
                     className="block w-full p-3 text-center text-white bg-blue-500 rounded-lg hover:bg-blue-600">
                     Practice Problems
                   </Link>
-                  <Link to="/student/submissions"
+                  <Link to="/student/assignments"
                     className="block w-full p-3 text-center text-white bg-purple-500 rounded-lg hover:bg-purple-600">
-                    View My Submissions
+                    View My Assignments
                   </Link>
                 </div>
               </div>

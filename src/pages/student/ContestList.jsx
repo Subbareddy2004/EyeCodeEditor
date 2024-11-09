@@ -95,8 +95,8 @@ const ContestList = () => {
                     {new Date(contest.startTime).toLocaleString()}
                   </p>
                   <p>
-                    <span className="font-medium">Duration:</span>{' '}
-                    {contest.duration} minutes
+                    <span className="font-medium">Deadline:</span>{' '}
+                    {new Date(new Date(contest.startTime).getTime() + contest.duration * 60000).toLocaleString()}
                   </p>
                   <p>
                     <span className="font-medium">Problems:</span>{' '}
@@ -115,7 +115,7 @@ const ContestList = () => {
                     navigate(`/student/contests/${contest._id}`);
                   }}
                 >
-                  View Details
+                  Join Contest
                 </button>
               </div>
             );

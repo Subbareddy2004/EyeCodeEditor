@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FaCode, FaClock, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import { FaCode, FaClock, FaArrowLeft, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import CodeEditor from '../../components/CodeEditor';
@@ -42,6 +42,8 @@ const AssignmentView = () => {
   const { user } = useAuth();
   const [totalPoints, setTotalPoints] = useState(0);
   const [earnedPoints, setEarnedPoints] = useState(0);
+  const [error, setError] = useState('');
+  const [testResults, setTestResults] = useState(null);
 
   const languages = [
     { value: 'python', label: 'Python' },
@@ -79,6 +81,7 @@ const AssignmentView = () => {
 
     setIsSubmitting(true);
     setResults(null);
+    setError('');
 
     try {
       const response = await axios.post(`${API_URL}/assignments/${assignmentId}/submit`, {
@@ -89,14 +92,22 @@ const AssignmentView = () => {
 
       setResults(response.data);
       
-      if (response.data.success) {
-        loadAssignment();
-        toast.success('Solution submitted successfully!');
-      } else {
-        toast.error('Some test cases failed. Check the results below.');
+      if (response.data.results) {
+        setTestResults(response.data.results);
+        const compilationError = response.data.results[0]?.error;
+        if (compilationError) {
+          setError(compilationError);
+          toast.error('Compilation error occurred');
+        } else if (response.data.success) {
+          loadAssignment();
+          toast.success('Solution submitted successfully!');
+        } else {
+          toast.error('Some test cases failed. Check the results below.');
+        }
       }
     } catch (error) {
       console.error('Submission error:', error);
+      setError(error.response?.data?.message || 'Error submitting solution');
       toast.error(error.response?.data?.message || 'Error submitting solution');
     } finally {
       setIsSubmitting(false);
@@ -312,35 +323,67 @@ const AssignmentView = () => {
                     theme={darkMode ? 'vs-dark' : 'light'}
                   />
                   <div className="mt-4 flex justify-between items-center">
-                    {results && (
-                      <div className={`flex-1 mr-4 p-4 rounded-lg ${
-                        results.success 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' 
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-                      }`}>
-                        <h3 className="font-semibold mb-2">
-                          {results.success ? 'Success!' : 'Test Case Failed'}
-                        </h3>
-                        <div className="font-mono text-sm">
-                          {results.failedTestCase && (
-                            <>
-                              <p>Input:</p>
-                              <pre className="bg-white bg-opacity-50 p-2 rounded mt-1">
-                                {results.failedTestCase.input}
-                              </pre>
-                              <p className="mt-2">Your Output:</p>
-                              <pre className="bg-white bg-opacity-50 p-2 rounded mt-1">
-                                {results.failedTestCase.actualOutput}
-                              </pre>
-                              <p className="mt-2">Expected Output:</p>
-                              <pre className="bg-white bg-opacity-50 p-2 rounded mt-1">
-                                {results.failedTestCase.expectedOutput}
-                              </pre>
-                            </>
-                          )}
+                    {/* Error Display */}
+                    {error && (
+                      <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-red-900/50' : 'bg-red-50'} border ${darkMode ? 'border-red-700' : 'border-red-200'}`}>
+                        <div className="flex items-start">
+                          <FaExclamationTriangle className={`mt-1 mr-3 ${darkMode ? 'text-red-400' : 'text-red-500'}`} />
+                          <div>
+                            <h4 className={`font-medium mb-1 ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+                              Compilation/Runtime Error
+                            </h4>
+                            <pre className={`whitespace-pre-wrap font-mono text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                              {error}
+                            </pre>
+                          </div>
                         </div>
                       </div>
                     )}
+
+                    {/* Test Results */}
+                    {testResults && (
+                      <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                        <h4 className={`font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                          Test Results:
+                        </h4>
+                        <div className="space-y-2">
+                          {testResults.map((result, index) => (
+                            <div 
+                              key={index}
+                              className={`p-3 rounded ${
+                                result.passed 
+                                  ? darkMode ? 'bg-green-900/50' : 'bg-green-50' 
+                                  : darkMode ? 'bg-red-900/50' : 'bg-red-50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className={`font-medium ${
+                                  result.passed 
+                                    ? darkMode ? 'text-green-200' : 'text-green-800'
+                                    : darkMode ? 'text-red-200' : 'text-red-800'
+                                }`}>
+                                  Test Case {index + 1}: {result.passed ? 'Passed' : 'Failed'}
+                                </span>
+                              </div>
+                              {!result.passed && !result.isHidden && (
+                                <div className="mt-2 space-y-1 text-sm">
+                                  <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                    <span className="font-medium">Input:</span> {result.input}
+                                  </div>
+                                  <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                    <span className="font-medium">Expected:</span> {result.expected}
+                                  </div>
+                                  <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                    <span className="font-medium">Got:</span> {result.actual || 'No output'}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       onClick={handleSubmit}
                       disabled={isSubmitting}
