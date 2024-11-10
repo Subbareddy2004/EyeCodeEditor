@@ -12,12 +12,14 @@ const ContestLeaderboard = () => {
   const [contest, setContest] = useState(null);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { id } = useParams();
   const { darkMode } = useTheme();
 
   useEffect(() => {
     const fetchContest = async () => {
       try {
+        setLoading(true);
         const response = await axios.get(`${API_URL}/contests/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
@@ -25,11 +27,61 @@ const ContestLeaderboard = () => {
       } catch (error) {
         console.error('Error fetching contest:', error);
         toast.error('Failed to fetch contest data');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchContest();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className={`h-8 w-48 mb-6 rounded ${
+          darkMode ? 'bg-gray-700' : 'bg-gray-200'
+        } animate-pulse`} />
+        
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <div className="inline-block min-w-full align-middle">
+            <div className={`rounded-lg shadow ${
+              darkMode ? 'bg-[#242b3d]' : 'bg-white'
+            }`}>
+              <div className="h-12 bg-blue-500 rounded-t-lg" />
+              
+              {[1, 2, 3, 4, 5].map((_, index) => (
+                <div 
+                  key={index}
+                  className={`flex items-center space-x-4 p-4 ${
+                    darkMode ? 'border-gray-700' : 'border-gray-200'
+                  } border-b last:border-b-0`}
+                >
+                  <div className={`h-4 w-8 rounded ${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  } animate-pulse`} />
+                  <div className={`h-4 w-32 rounded ${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  } animate-pulse`} />
+                  <div className={`h-4 w-16 rounded ${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  } animate-pulse`} />
+                  <div className={`h-4 w-16 rounded ${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  } animate-pulse`} />
+                  <div className={`hidden sm:block h-4 w-40 rounded ${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  } animate-pulse`} />
+                  <div className={`h-4 w-24 rounded ${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-200'
+                  } animate-pulse`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getLeaderboardData = () => {
     if (!contest) return [];
