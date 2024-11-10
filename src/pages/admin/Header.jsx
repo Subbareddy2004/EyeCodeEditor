@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
   FaMoon, FaSun, FaTachometerAlt, FaChalkboardTeacher,
-  FaUserGraduate, FaSignOutAlt, FaUserShield
+  FaUserGraduate, FaSignOutAlt, FaUserShield, FaBars, FaTimes
 } from 'react-icons/fa';
 
 const AdminHeader = () => {
   const { user, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/admin/dashboard', icon: FaTachometerAlt, label: 'Dashboard' },
@@ -33,16 +34,17 @@ const AdminHeader = () => {
           {/* Logo */}
           <Link 
             to="/admin/dashboard" 
-            className={`text-xl font-bold flex items-center space-x-2 ${
+            className={`text-lg sm:text-xl font-bold flex items-center space-x-2 ${
               darkMode ? 'text-white' : 'text-gray-800'
             }`}
           >
-            <FaUserShield className="text-blue-500 text-2xl" />
-            <span>EyeLabs Admin</span>
+            <FaUserShield className="text-blue-500 text-xl sm:text-2xl" />
+            <span className="hidden sm:inline">EyeLabs Admin</span>
+            <span className="sm:hidden">Admin</span>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-4 lg:space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -58,7 +60,7 @@ const AdminHeader = () => {
           </nav>
 
           {/* Right side controls */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={toggleDarkMode}
               className={`p-2 rounded-full transition-colors ${
@@ -71,10 +73,10 @@ const AdminHeader = () => {
               {darkMode ? <FaSun className="h-5 w-5" /> : <FaMoon className="h-5 w-5" />}
             </button>
 
-            <div className={`flex items-center space-x-3 ${
+            <div className={`hidden sm:flex items-center space-x-3 ${
               darkMode ? 'text-white' : 'text-gray-700'
             }`}>
-              <span className="font-medium hidden sm:inline">Admin ({user?.name})</span>
+              <span className="font-medium">Admin ({user?.name})</span>
               <button
                 onClick={logout}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
@@ -84,11 +86,65 @@ const AdminHeader = () => {
                 }`}
               >
                 <FaSignOutAlt className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <span>Logout</span>
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md transition-colors"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? (
+                <FaTimes className={`h-6 w-6 ${darkMode ? 'text-white' : 'text-gray-800'}`} />
+              ) : (
+                <FaBars className={`h-6 w-6 ${darkMode ? 'text-white' : 'text-gray-800'}`} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className={`px-2 pt-2 pb-3 space-y-1 ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`${isActive(item.path)} block px-3 py-2 rounded-md text-base font-medium hover:${
+                    darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
+              ))}
+              
+              {/* Mobile Logout Button */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  logout();
+                }}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium ${
+                  darkMode 
+                    ? 'text-white hover:bg-gray-700' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FaSignOutAlt className="h-5 w-5" />
+                <span>Logout ({user?.name})</span>
               </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );

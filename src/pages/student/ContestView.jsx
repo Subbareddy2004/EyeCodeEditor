@@ -50,8 +50,7 @@ const ContestView = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!userId) {
-      console.warn('No authenticated user found');
+    if (!userId || !user) {
       toast.error('Please login to view contest details');
       navigate('/login');
       return;
@@ -59,33 +58,40 @@ const ContestView = () => {
 
     const fetchContestData = async () => {
       try {
-        const response = await axios.get(`/contests/${id}`);
-        setContest(response.data);
+        const response = await axios.get(`/contests/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
         
-        console.log('Current userId:', userId);
-        console.log('All participants:', response.data.participants);
+        if (!response.data) {
+          toast.error('Contest not found');
+          navigate('/student/contests');
+          return;
+        }
+
+        setContest(response.data);
         
         const participant = response.data.participants?.find(
           p => p.student._id === userId
         );
         
         if (participant) {
-          console.log('Found participant data:', participant);
           setProblemsSolved(participant.completedProblems?.length || 0);
           setTotalPoints(participant.totalPoints || 0);
         } else {
-          console.log('No participant found for userId:', userId);
           setProblemsSolved(0);
           setTotalPoints(0);
         }
       } catch (error) {
         console.error('Error fetching contest:', error);
-        toast.error('Error fetching contest details');
+        toast.error(error.response?.data?.message || 'Error fetching contest details');
+        navigate('/student/contests');
       }
     };
 
     fetchContestData();
-  }, [userId]);
+  }, [userId, user, id, navigate]);
 
   useEffect(() => {
     if (started) {
@@ -103,11 +109,18 @@ const ContestView = () => {
 
   const fetchContest = async () => {
     try {
-      const response = await axios.get(`/contests/${id}`);
+      const response = await axios.get(`/contests/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
+      
+      if (!response.data) return;
+      
       setContest(response.data);
       
       const participant = response.data.participants?.find(
-        p => p.student._id === localStorage.getItem('userId')
+        p => p.student._id === userId
       );
       
       if (participant) {
@@ -115,7 +128,8 @@ const ContestView = () => {
         setTotalPoints(participant.totalPoints || 0);
       }
     } catch (error) {
-      toast.error('Error fetching contest');
+      console.error('Error fetching contest:', error);
+      toast.error('Error updating contest data');
     }
   };
 
@@ -178,8 +192,9 @@ const ContestView = () => {
   };
 
   const handleRunCode = async () => {
-    if (!userId) {
+    if (!userId || !user) {
       toast.error('Please login to submit solutions');
+      navigate('/login');
       return;
     }
 
@@ -189,7 +204,12 @@ const ContestView = () => {
       
       const runResponse = await axios.post(
         `/contests/${id}/problems/${selectedProblem.problem._id}/run`,
-        { code, language }
+        { code, language },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          }
+        }
       );
 
       console.log('Run response:', runResponse.data);
@@ -284,38 +304,73 @@ const ContestView = () => {
     });
   }, [problemsSolved, totalPoints]);
 
-  if (!contest) return <div>Loading...</div>;
+  if (!user || !userId) {
+    return null; // or a loading spinner
+  }
+
+  if (!contest) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-      <div className={`container mx-auto p-4 ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-        <div className={`rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex justify-between items-center mb-6">
+      <div className="container mx-auto p-4 sm:p-6">
+        <div className={`rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-6 border-b border-gray-700">
             <div>
-              <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h2 className={`text-xl sm:text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {contest?.title}
               </h2>
-              <div className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} key={`${problemsSolved}-${totalPoints}`}>
+              <div className={`mt-2 text-sm sm:text-base ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 <p>Total Problems: {contest?.problems?.length || 0}</p>
                 <p>Problems Solved: {problemsSolved} / {contest?.problems?.length || 0}</p>
-                {/* <p>Total Points: {totalPoints}</p> */}
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
               {timeLeft && (
                 <div className={`flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   <FaClock />
                   <span>{timeLeft}</span>
                 </div>
               )}
-              <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <div className={`text-xs sm:text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 Deadline: {new Date(new Date(contest.startTime).getTime() + contest.duration * 60000).toLocaleString()}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
+          {/* Mobile Problem Selector */}
+          <div className="block lg:hidden p-4">
+            <select
+              value={selectedProblem?.problem._id || ''}
+              onChange={(e) => {
+                const problem = contest?.problems?.find(p => p.problem._id === e.target.value);
+                if (problem) handleProblemSelect(problem);
+              }}
+              className={`w-full p-3 rounded-lg ${
+                isDarkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'
+              }`}
+            >
+              <option value="">Select a Problem</option>
+              {contest?.problems?.map((problem, index) => (
+                <option key={problem.problem._id} value={problem.problem._id}>
+                  Problem {index + 1}: {problem.problem.title} 
+                  {isProblemCompleted(problem.problem._id) ? ' (Completed)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 sm:p-6">
+            {/* Problem List - Desktop */}
+            <div className="hidden lg:block space-y-2">
               {contest?.problems?.map((problem, index) => {
                 const isCompleted = isProblemCompleted(problem.problem._id);
                 return (
@@ -347,23 +402,28 @@ const ContestView = () => {
               })}
             </div>
 
-            <div className="md:col-span-2">
+            {/* Problem Details and Code Editor */}
+            <div className="lg:col-span-2">
               {selectedProblem ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Problem Description */}
                   <div className={`rounded-lg p-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <h3 className={`text-lg sm:text-xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {selectedProblem.problem.title}
                     </h3>
-                    <p className={`mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`mb-6 text-sm sm:text-base ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       {selectedProblem.problem.description}
                     </p>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Sample Cases */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                           Sample Input:
                         </h4>
-                        <pre className={`p-2 rounded ${isDarkMode ? 'bg-[#f8f9fa] bg-opacity-5 text-gray-300' : 'bg-gray-50 text-gray-700'}`}>
+                        <pre className={`p-2 rounded text-sm overflow-x-auto ${
+                          isDarkMode ? 'bg-[#f8f9fa] bg-opacity-5 text-gray-300' : 'bg-gray-50 text-gray-700'
+                        }`}>
                           {selectedProblem.problem.sampleInput || 'No sample input provided'}
                         </pre>
                       </div>
@@ -371,114 +431,127 @@ const ContestView = () => {
                         <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                           Sample Output:
                         </h4>
-                        <pre className={`p-2 rounded ${isDarkMode ? 'bg-[#f8f9fa] bg-opacity-5 text-gray-300' : 'bg-gray-50 text-gray-700'}`}>
+                        <pre className={`p-2 rounded text-sm overflow-x-auto ${
+                          isDarkMode ? 'bg-[#f8f9fa] bg-opacity-5 text-gray-300' : 'bg-gray-50 text-gray-700'
+                        }`}>
                           {selectedProblem.problem.sampleOutput || 'No sample output provided'}
                         </pre>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <select
-                      value={language}
-                      onChange={(e) => handleLanguageChange(e.target.value)}
-                      className={`px-3 py-2 rounded ${isDarkMode ? 'bg-white bg-opacity-10 text-white border-0' : 'bg-white text-gray-900 border-gray-300'}`}
-                    >
-                      {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
-                        <option key={key} value={key}>{config.label}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={handleRunCode}
-                      disabled={loading}
-                      className="px-4 py-2 rounded bg-[#0d6efd] hover:bg-[#0b5ed7] text-white"
-                    >
-                      {loading ? 'Running...' : 'Run Code'}
-                    </button>
-                  </div>
+                  {/* Code Editor Section */}
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <select
+                        value={language}
+                        onChange={(e) => handleLanguageChange(e.target.value)}
+                        className={`w-full sm:w-auto px-3 py-2 rounded ${
+                          isDarkMode ? 'bg-gray-700 text-white' : 'bg-white text-gray-900 border-gray-300'
+                        }`}
+                      >
+                        {Object.entries(LANGUAGE_CONFIG).map(([key, config]) => (
+                          <option key={key} value={key}>{config.label}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleRunCode}
+                        disabled={loading}
+                        className="w-full sm:w-auto px-4 py-2 rounded bg-[#0d6efd] hover:bg-[#0b5ed7] text-white disabled:opacity-50"
+                      >
+                        {loading ? 'Running...' : 'Run Code'}
+                      </button>
+                    </div>
 
-                  <CodeEditor
-                    value={code}
-                    onChange={setCode}
-                    language={language}
-                    theme={isDarkMode ? "vs-dark" : "light"}
-                  />
+                    {/* Code Editor */}
+                    <div className="h-[300px] sm:h-[400px] lg:h-[500px]">
+                      <CodeEditor
+                        value={code}
+                        onChange={setCode}
+                        language={language}
+                        theme={isDarkMode ? "vs-dark" : "light"}
+                      />
+                    </div>
 
-                  {/* Error Display Box */}
-                  {error && (
-                    <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-red-900/50' : 'bg-red-50'} border ${isDarkMode ? 'border-red-700' : 'border-red-200'}`}>
-                      <div className="flex items-start">
-                        <FaExclamationTriangle className={`mt-1 mr-3 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
-                        <div>
-                          <h4 className={`font-medium mb-1 ${isDarkMode ? 'text-red-200' : 'text-red-800'}`}>
-                            Compilation/Runtime Error
+                    {/* Results Section */}
+                    <div className="space-y-4">
+                      {/* Error Display Box */}
+                      {error && (
+                        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-red-900/50' : 'bg-red-50'} border ${isDarkMode ? 'border-red-700' : 'border-red-200'}`}>
+                          <div className="flex items-start">
+                            <FaExclamationTriangle className={`mt-1 mr-3 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
+                            <div>
+                              <h4 className={`font-medium mb-1 ${isDarkMode ? 'text-red-200' : 'text-red-800'}`}>
+                                Compilation/Runtime Error
+                              </h4>
+                              <pre className={`whitespace-pre-wrap font-mono text-sm ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>
+                                {error}
+                              </pre>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Test Results */}
+                      {testResults && (
+                        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                          <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                            Test Results:
                           </h4>
-                          <pre className={`whitespace-pre-wrap font-mono text-sm ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>
-                            {error}
+                          <div className="space-y-2">
+                            {testResults.map((result, index) => (
+                              <div 
+                                key={index}
+                                className={`p-3 rounded ${
+                                  result.passed 
+                                    ? isDarkMode ? 'bg-green-900/50' : 'bg-green-50' 
+                                    : isDarkMode ? 'bg-red-900/50' : 'bg-red-50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className={`font-medium ${
+                                    result.passed 
+                                      ? isDarkMode ? 'text-green-200' : 'text-green-800'
+                                      : isDarkMode ? 'text-red-200' : 'text-red-800'
+                                  }`}>
+                                    Test Case {index + 1}: {result.passed ? 'Passed' : 'Failed'}
+                                  </span>
+                                </div>
+                                {!result.passed && !result.isHidden && (
+                                  <div className="mt-2 space-y-1 text-sm">
+                                    <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                      <span className="font-medium">Input:</span> {result.input}
+                                    </div>
+                                    <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                      <span className="font-medium">Expected:</span> {result.expected}
+                                    </div>
+                                    <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                      <span className="font-medium">Got:</span> {result.actual || 'No output'}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Output Display */}
+                      {output && (
+                        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                          <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                            Output:
+                          </h4>
+                          <pre className={`p-3 rounded ${isDarkMode ? 'bg-gray-900 text-gray-300' : 'bg-gray-50 text-gray-700'}`}>
+                            {output}
                           </pre>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  )}
-
-                  {/* Test Results */}
-                  {testResults && (
-                    <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                      <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                        Test Results:
-                      </h4>
-                      <div className="space-y-2">
-                        {testResults.map((result, index) => (
-                          <div 
-                            key={index}
-                            className={`p-3 rounded ${
-                              result.passed 
-                                ? isDarkMode ? 'bg-green-900/50' : 'bg-green-50' 
-                                : isDarkMode ? 'bg-red-900/50' : 'bg-red-50'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className={`font-medium ${
-                                result.passed 
-                                  ? isDarkMode ? 'text-green-200' : 'text-green-800'
-                                  : isDarkMode ? 'text-red-200' : 'text-red-800'
-                              }`}>
-                                Test Case {index + 1}: {result.passed ? 'Passed' : 'Failed'}
-                              </span>
-                            </div>
-                            {!result.passed && !result.isHidden && (
-                              <div className="mt-2 space-y-1 text-sm">
-                                <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                                  <span className="font-medium">Input:</span> {result.input}
-                                </div>
-                                <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                                  <span className="font-medium">Expected:</span> {result.expected}
-                                </div>
-                                <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
-                                  <span className="font-medium">Got:</span> {result.actual || 'No output'}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Output Display */}
-                  {output && (
-                    <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                      <h4 className={`font-medium mb-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                        Output:
-                      </h4>
-                      <pre className={`p-3 rounded ${isDarkMode ? 'bg-gray-900 text-gray-300' : 'bg-gray-50 text-gray-700'}`}>
-                        {output}
-                      </pre>
-                    </div>
-                  )}
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-center justify-center h-[200px] sm:h-[400px]">
                   <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     Select a problem to start coding
                   </p>

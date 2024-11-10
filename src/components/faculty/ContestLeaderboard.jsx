@@ -64,48 +64,54 @@ const ContestLeaderboard = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      <h1 className={`text-xl sm:text-2xl font-bold mb-4 sm:mb-6 ${
+        darkMode ? 'text-white' : 'text-gray-800'
+      }`}>
         Contest Leaderboard
       </h1>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-blue-500 text-white">
-            <tr>
-              <th className="px-6 py-3 text-left">RANK</th>
-              <th className="px-6 py-3 text-left">STUDENT</th>
-              <th className="px-6 py-3 text-left">PROBLEMS SOLVED</th>
-              <th className="px-6 py-3 text-left">TOTAL POINTS</th>
-              <th className="px-6 py-3 text-left">LAST SUBMISSION</th>
-              <th className="px-6 py-3 text-left">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y ${darkMode ? 'divide-gray-700 text-gray-200' : 'divide-gray-200'}`}>
-            {getLeaderboardData().map((participant, index) => (
-              <tr key={participant.id + "-" + index}>
-                <td className="px-6 py-4">{index + 1}</td>
-                <td className="px-6 py-4">{participant.name}</td>
-                <td className="px-6 py-4">{participant.problemsSolved}</td>
-                <td className="px-6 py-4">{participant.totalPoints}</td>
-                <td className="px-6 py-4">
-                  {participant.lastSubmission 
-                    ? new Date(participant.lastSubmission).toLocaleString()
-                    : 'No submissions'}
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleViewCode(participant)}
-                    className="flex items-center text-blue-500 hover:text-blue-600"
-                  >
-                    <FaCode className="mr-2" />
-                    View Code
-                  </button>
-                </td>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full">
+            <thead className="bg-blue-500 text-white">
+              <tr>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm">RANK</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm">STUDENT</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm">PROBLEMS</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm">POINTS</th>
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-sm">LAST SUBMISSION</th>
+                <th className="px-3 sm:px-6 py-3 text-left text-xs sm:text-sm">ACTIONS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={`divide-y ${
+              darkMode ? 'divide-gray-700 text-gray-200' : 'divide-gray-200'
+            }`}>
+              {getLeaderboardData().map((participant, index) => (
+                <tr key={participant.id + "-" + index}>
+                  <td className="px-6 py-4">{index + 1}</td>
+                  <td className="px-6 py-4">{participant.name}</td>
+                  <td className="px-6 py-4">{participant.problemsSolved}</td>
+                  <td className="px-6 py-4">{participant.totalPoints}</td>
+                  <td className="px-6 py-4">
+                    {participant.lastSubmission 
+                      ? new Date(participant.lastSubmission).toLocaleString()
+                      : 'No submissions'}
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleViewCode(participant)}
+                      className="flex items-center text-blue-500 hover:text-blue-600"
+                    >
+                      <FaCode className="mr-2" />
+                      View Code
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Modal

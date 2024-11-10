@@ -207,10 +207,10 @@ const AssignmentView = () => {
   };
 
   return (
-    <div className={`min-h-screen p-6 ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-100'}`}>
+    <div className={`min-h-screen p-4 sm:p-6 ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-100'}`}>
       {/* Header section */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <button 
             onClick={() => navigate('/student/assignments')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
@@ -224,223 +224,253 @@ const AssignmentView = () => {
             Due: {new Date(assignment?.dueDate).toLocaleString()}
           </div>
         </div>
-        <h1 className={`text-3xl font-bold mt-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+        <h1 className={`text-2xl sm:text-3xl font-bold mt-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
           {assignment?.title}
         </h1>
-        <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        <p className={`mt-2 text-sm sm:text-base ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
           Created by: {assignment?.createdBy?.name}
         </p>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-4 gap-6">
-        {/* Problems List */}
-        <div className="col-span-1">
-          <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                Problems ({assignment?.problemsSolved || 0}/{assignment?.totalProblems || 0} Solved)
-              </h2>
-              <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                Total Points: {assignment?.earnedPoints || 0}/{assignment?.totalPoints || 0}
-              </div>
-            </div>
-            <div className="space-y-2">
-              {assignment?.problems?.map((problem, index) => (
-                <div
-                  key={problem._id}
-                  onClick={() => handleProblemSelect(problem)}
-                  className={`p-4 cursor-pointer rounded-lg ${
-                    darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
-                  } ${
-                    selectedProblem?._id === problem._id
-                      ? darkMode
-                        ? 'ring-2 ring-blue-500'
-                        : 'ring-2 ring-blue-400'
-                      : 'hover:bg-opacity-80'
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                        Problem {index + 1}: {problem.title}
-                      </h3>
-                      {problem.solved && (
-                        <span className="text-green-500 text-sm flex items-center mt-1">
-                          <FaCheckCircle className="mr-1" /> Completed
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center">
-                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Points: {problem.points || 10}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto">
+        {/* Mobile Problem Selector */}
+        <div className="block lg:hidden mb-6">
+          <select
+            value={selectedProblem?._id || ''}
+            onChange={(e) => {
+              const problem = assignment?.problems?.find(p => p._id === e.target.value);
+              if (problem) handleProblemSelect(problem);
+            }}
+            className={`w-full p-3 rounded-lg ${
+              darkMode ? 'bg-[#242b3d] text-white' : 'bg-white text-gray-900'
+            }`}
+          >
+            <option value="">Select a Problem</option>
+            {assignment?.problems?.map((problem, index) => (
+              <option key={problem._id} value={problem._id}>
+                Problem {index + 1}: {problem.title} {problem.solved ? '(Completed)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Problem Details and Code Editor */}
-        <div className="col-span-3">
-          {selectedProblem ? (
-            <div className={`rounded-lg ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
-              <div className="p-6">
-                <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                  {selectedProblem.title}
+        {/* Desktop Layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Problems List - Desktop */}
+          <div className="hidden lg:block w-full lg:w-1/4">
+            <div className={`p-4 rounded-lg ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Problems ({assignment?.problemsSolved || 0}/{assignment?.totalProblems || 0} Solved)
                 </h2>
-                
-                {/* Description */}
-                <div className="mb-6">
-                  <h3 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                    Description
-                  </h3>
-                  <p className={`whitespace-pre-wrap ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                    {selectedProblem.description}
-                  </p>
+                <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Total Points: {assignment?.earnedPoints || 0}/{assignment?.totalPoints || 0}
                 </div>
-
-                {/* Sample Test Cases */}
-                {selectedProblem.testCases && selectedProblem.testCases.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                      Sample Test Cases
-                    </h3>
-                    {selectedProblem.testCases.map((testCase, index) => (
-                      <div key={index} className={`mb-4 p-4 rounded ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'}`}>
-                        <div className="mb-2">
-                          <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                            Input:
+              </div>
+              <div className="space-y-2">
+                {assignment?.problems?.map((problem, index) => (
+                  <div
+                    key={problem._id}
+                    onClick={() => handleProblemSelect(problem)}
+                    className={`p-4 cursor-pointer rounded-lg ${
+                      darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
+                    } ${
+                      selectedProblem?._id === problem._id
+                        ? darkMode
+                          ? 'ring-2 ring-blue-500'
+                          : 'ring-2 ring-blue-400'
+                        : 'hover:bg-opacity-80'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                          Problem {index + 1}: {problem.title}
+                        </h3>
+                        {problem.solved && (
+                          <span className="text-green-500 text-sm flex items-center mt-1">
+                            <FaCheckCircle className="mr-1" /> Completed
                           </span>
-                          <pre className={`mt-1 p-2 rounded ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
-                            {testCase.input}
-                          </pre>
-                        </div>
-                        <div>
-                          <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                            Expected Output:
-                          </span>
-                          <pre className={`mt-1 p-2 rounded ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
-                            {testCase.output}
-                          </pre>
-                        </div>
+                        )}
                       </div>
-                    ))}
+                      <div className="flex items-center">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Points: {problem.points || 10}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
+              </div>
+            </div>
+          </div>
 
-                {/* Code Editor Section */}
-                <div className="mb-6">
-                  <div className="flex justify-end mb-4">
-                    <select
-                      value={selectedLanguage}
-                      onChange={handleLanguageChange}
-                      className={`px-3 py-1 rounded ${
-                        darkMode 
-                          ? 'bg-gray-700 text-white' 
-                          : 'bg-gray-100 text-gray-900'
-                      }`}
-                    >
-                      {Object.entries(LANGUAGE_CONFIG).map(([value, { label }]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
+          {/* Problem Details and Code Editor */}
+          <div className="w-full lg:w-3/4">
+            {selectedProblem ? (
+              <div className={`rounded-lg ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
+                <div className="p-4 sm:p-6">
+                  <h2 className={`text-xl sm:text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                    {selectedProblem.title}
+                  </h2>
+                  
+                  {/* Description */}
+                  <div className="mb-6">
+                    <h3 className={`text-lg sm:text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Description
+                    </h3>
+                    <p className={`whitespace-pre-wrap text-sm sm:text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {selectedProblem.description}
+                    </p>
                   </div>
-                  <CodeEditor
-                    value={code}
-                    onChange={handleCodeChange}
-                    language={selectedLanguage}
-                    theme={darkMode ? 'vs-dark' : 'light'}
-                  />
-                  <div className="mt-4 flex justify-between items-center">
-                    {/* Error Display */}
-                    {error && (
-                      <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-red-900/50' : 'bg-red-50'} border ${darkMode ? 'border-red-700' : 'border-red-200'}`}>
-                        <div className="flex items-start">
-                          <FaExclamationTriangle className={`mt-1 mr-3 ${darkMode ? 'text-red-400' : 'text-red-500'}`} />
+
+                  {/* Sample Test Cases */}
+                  {selectedProblem.testCases && selectedProblem.testCases.length > 0 && (
+                    <div className="mb-6 overflow-x-auto">
+                      <h3 className={`text-lg sm:text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                        Sample Test Cases
+                      </h3>
+                      {selectedProblem.testCases.map((testCase, index) => (
+                        <div key={index} className={`mb-4 p-4 rounded ${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'}`}>
+                          <div className="mb-2">
+                            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                              Input:
+                            </span>
+                            <pre className={`mt-1 p-2 rounded ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
+                              {testCase.input}
+                            </pre>
+                          </div>
                           <div>
-                            <h4 className={`font-medium mb-1 ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
-                              Compilation/Runtime Error
-                            </h4>
-                            <pre className={`whitespace-pre-wrap font-mono text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
-                              {error}
+                            <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                              Expected Output:
+                            </span>
+                            <pre className={`mt-1 p-2 rounded ${darkMode ? 'bg-[#242b3d]' : 'bg-white'}`}>
+                              {testCase.output}
                             </pre>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      ))}
+                    </div>
+                  )}
 
-                    {/* Test Results */}
-                    {testResults && (
-                      <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                        <h4 className={`font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                          Test Results:
-                        </h4>
-                        <div className="space-y-2">
-                          {testResults.map((result, index) => (
-                            <div 
-                              key={index}
-                              className={`p-3 rounded ${
-                                result.passed 
-                                  ? darkMode ? 'bg-green-900/50' : 'bg-green-50' 
-                                  : darkMode ? 'bg-red-900/50' : 'bg-red-50'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className={`font-medium ${
-                                  result.passed 
-                                    ? darkMode ? 'text-green-200' : 'text-green-800'
-                                    : darkMode ? 'text-red-200' : 'text-red-800'
-                                }`}>
-                                  Test Case {index + 1}: {result.passed ? 'Passed' : 'Failed'}
-                                </span>
-                              </div>
-                              {!result.passed && !result.isHidden && (
-                                <div className="mt-2 space-y-1 text-sm">
-                                  <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                                    <span className="font-medium">Input:</span> {result.input}
-                                  </div>
-                                  <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                                    <span className="font-medium">Expected:</span> {result.expected}
-                                  </div>
-                                  <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
-                                    <span className="font-medium">Got:</span> {result.actual || 'No output'}
-                                  </div>
-                                </div>
-                              )}
+                  {/* Code Editor Section */}
+                  <div className="mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                      <select
+                        value={selectedLanguage}
+                        onChange={handleLanguageChange}
+                        className={`w-full sm:w-auto px-3 py-2 rounded ${
+                          darkMode 
+                            ? 'bg-gray-700 text-white' 
+                            : 'bg-gray-100 text-gray-900'
+                        }`}
+                      >
+                        {Object.entries(LANGUAGE_CONFIG).map(([value, { label }]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Code Editor */}
+                    <div className="h-[400px] sm:h-[500px]">
+                      <CodeEditor
+                        value={code}
+                        onChange={handleCodeChange}
+                        language={selectedLanguage}
+                        theme={darkMode ? 'vs-dark' : 'light'}
+                      />
+                    </div>
+
+                    {/* Submit Button and Results */}
+                    <div className="mt-4 space-y-4">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className={`w-full sm:w-auto px-6 py-2 rounded-lg text-white font-semibold ${
+                          isSubmitting 
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : darkMode 
+                              ? 'bg-blue-600 hover:bg-blue-700' 
+                              : 'bg-blue-500 hover:bg-blue-600'
+                        }`}
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Submit Solution'}
+                      </button>
+
+                      {/* Error and Test Results */}
+                      {error && (
+                        <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-red-900/50' : 'bg-red-50'} border ${darkMode ? 'border-red-700' : 'border-red-200'}`}>
+                          <div className="flex items-start">
+                            <FaExclamationTriangle className={`mt-1 mr-3 ${darkMode ? 'text-red-400' : 'text-red-500'}`} />
+                            <div>
+                              <h4 className={`font-medium mb-1 ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+                                Compilation/Runtime Error
+                              </h4>
+                              <pre className={`whitespace-pre-wrap font-mono text-sm ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                                {error}
+                              </pre>
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    <button
-                      onClick={handleSubmit}
-                      disabled={isSubmitting}
-                      className={`px-6 py-2 rounded-lg text-white font-semibold ${
-                        isSubmitting 
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : darkMode 
-                            ? 'bg-blue-600 hover:bg-blue-700' 
-                            : 'bg-blue-500 hover:bg-blue-600'
-                      }`}
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Solution'}
-                    </button>
+                      {testResults && (
+                        <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                          <h4 className={`font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                            Test Results:
+                          </h4>
+                          <div className="space-y-2">
+                            {testResults.map((result, index) => (
+                              <div 
+                                key={index}
+                                className={`p-3 rounded ${
+                                  result.passed 
+                                    ? darkMode ? 'bg-green-900/50' : 'bg-green-50' 
+                                    : darkMode ? 'bg-red-900/50' : 'bg-red-50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className={`font-medium ${
+                                    result.passed 
+                                      ? darkMode ? 'text-green-200' : 'text-green-800'
+                                      : darkMode ? 'text-red-200' : 'text-red-800'
+                                  }`}>
+                                    Test Case {index + 1}: {result.passed ? 'Passed' : 'Failed'}
+                                  </span>
+                                </div>
+                                {!result.passed && !result.isHidden && (
+                                  <div className="mt-2 space-y-1 text-sm">
+                                    <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                      <span className="font-medium">Input:</span> {result.input}
+                                    </div>
+                                    <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                      <span className="font-medium">Expected:</span> {result.expected}
+                                    </div>
+                                    <div className={darkMode ? 'text-gray-300' : 'text-gray-600'}>
+                                      <span className="font-medium">Got:</span> {result.actual || 'No output'}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Select a problem to start coding
-              </p>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center justify-center h-[200px] sm:h-[400px]">
+                <p className={`text-base sm:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Select a problem to start coding
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

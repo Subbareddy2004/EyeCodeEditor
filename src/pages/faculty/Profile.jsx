@@ -54,34 +54,28 @@ const Profile = ({ user }) => {
   };
 
   return (
-    <div className={`min-h-screen ${
-      darkMode 
-        ? 'bg-[#1a1f2c]' 
-        : 'bg-gradient-to-br from-indigo-100 to-blue-200'
-    }`}>
-      <div className="container mx-auto p-6">
-        <h1 className={`text-4xl font-bold mb-8 ${
-          darkMode ? 'text-white' : 'text-indigo-800'
-        }`}>Faculty Profile</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="space-y-6">
           <ProfileCard 
-            title="Personal Information" 
+            title="Profile Information" 
             color="indigo"
             darkMode={darkMode}
           >
-            <ProfileItem 
-              icon={<FaUser />} 
-              label="Name" 
-              value={user.name}
-              darkMode={darkMode} 
-            />
-            <ProfileItem 
-              icon={<FaEnvelope />} 
-              label="Email" 
-              value={user.email}
-              darkMode={darkMode} 
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <ProfileItem 
+                icon={<FaUser />} 
+                label="Name" 
+                value={user.name}
+                darkMode={darkMode} 
+              />
+              <ProfileItem 
+                icon={<FaEnvelope />} 
+                label="Email" 
+                value={user.email}
+                darkMode={darkMode} 
+              />
+            </div>
           </ProfileCard>
 
           <ProfileCard 

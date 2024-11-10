@@ -20,7 +20,7 @@ const AddStudentForm = ({ onSubmit, onClose, newStudent, setNewStudent, darkMode
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div className={`${
       darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
-    } rounded-lg p-6 w-full max-w-md`}>
+    } rounded-lg p-4 sm:p-6 w-full max-w-md mx-4`}>
       <div className="flex justify-between items-center mb-4">
         <h2 className={`text-xl font-bold ${
           darkMode ? 'text-white' : 'text-gray-800'
@@ -418,86 +418,71 @@ const StudentManagement = () => {
 
   // Add table to display students
   const renderStudentsTable = () => (
-    <div className={`rounded-lg shadow overflow-hidden ${
-      darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
-    }`}>
-      <table className="min-w-full">
-        <thead className={`${
-          darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'
-        }`}>
-          <tr>
-            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-              darkMode ? 'text-gray-300' : 'text-gray-500'
-            }`}>Name</th>
-            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-              darkMode ? 'text-gray-300' : 'text-gray-500'
-            }`}>Email</th>
-            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-              darkMode ? 'text-gray-300' : 'text-gray-500'
-            }`}>Reg Number</th>
-            <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-              darkMode ? 'text-gray-300' : 'text-gray-500'
-            }`}>Actions</th>
-          </tr>
-        </thead>
-        <tbody className={`${
-          darkMode ? 'divide-gray-700' : 'divide-gray-200'
-        }`}>
-          {students.map((student) => (
-            <tr key={student._id} className={
-              darkMode ? 'hover:bg-[#1a1f2c]' : 'hover:bg-gray-50'
-            }>
-              <td className={`px-6 py-4 whitespace-nowrap ${
-                darkMode ? 'text-gray-200' : 'text-gray-900'
-              }`}>{student.name}</td>
-              <td className={`px-6 py-4 whitespace-nowrap ${
-                darkMode ? 'text-gray-200' : 'text-gray-900'
-              }`}>{student.email}</td>
-              <td className={`px-6 py-4 whitespace-nowrap ${
-                darkMode ? 'text-gray-200' : 'text-gray-900'
-              }`}>{student.regNumber}</td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <button 
-                  onClick={() => handleResetPassword(student._id)}
-                  disabled={actionLoading === `reset-${student._id}`}
-                  className={`${
-                    darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-900'
-                  } mr-3 disabled:opacity-50`}
-                  title="Reset Password"
-                >
-                  {actionLoading === `reset-${student._id}` ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <FaKey />
-                  )}
-                </button>
-                <button 
-                  onClick={() => handleEdit(student)}
-                  disabled={actionLoading.startsWith('delete-') || actionLoading.startsWith('reset-')}
-                  className={`${
-                    darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-900'
-                  } mr-3`}
-                >
-                  <FaEdit />
-                </button>
-                <button 
-                  onClick={() => handleDelete(student._id)}
-                  disabled={actionLoading === `delete-${student._id}`}
-                  className={`${
-                    darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-900'
-                  } disabled:opacity-50`}
-                >
-                  {actionLoading === `delete-${student._id}` ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <FaTrash />
-                  )}
-                </button>
-              </td>
+    <div className="overflow-x-auto">
+      <div className={`rounded-lg shadow ${
+        darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
+      } min-w-full`}>
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className={`${darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-50'}`}>
+            <tr>
+              <th className={`px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                darkMode ? 'text-gray-300' : 'text-gray-500'
+              }`}>Name</th>
+              <th className="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+              <th className="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Reg Number</th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className={`divide-y ${darkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
+            {students.map((student) => (
+              <tr key={student._id} className={darkMode ? 'hover:bg-[#1a1f2c]' : 'hover:bg-gray-50'}>
+                <td className={`px-4 sm:px-6 py-4 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                  <div className="flex flex-col sm:hidden">
+                    <span className="font-medium">{student.name}</span>
+                    <span className="text-sm text-gray-500 mt-1">{student.email}</span>
+                    <span className="text-sm text-gray-500">{student.regNumber}</span>
+                  </div>
+                  <span className="hidden sm:block">{student.name}</span>
+                </td>
+                <td className="hidden sm:table-cell px-4 sm:px-6 py-4">{student.email}</td>
+                <td className="hidden md:table-cell px-4 sm:px-6 py-4">{student.regNumber}</td>
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right sm:text-left">
+                  <div className="flex justify-end sm:justify-start space-x-3">
+                    <button 
+                      onClick={() => handleResetPassword(student._id)}
+                      disabled={actionLoading === `reset-${student._id}`}
+                      className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+                    >
+                      {actionLoading === `reset-${student._id}` ? (
+                        <FaSpinner className="animate-spin" />
+                      ) : (
+                        <FaKey />
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => handleEdit(student)}
+                      className="text-yellow-600 hover:text-yellow-900"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(student._id)}
+                      disabled={actionLoading === `delete-${student._id}`}
+                      className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                    >
+                      {actionLoading === `delete-${student._id}` ? (
+                        <FaSpinner className="animate-spin" />
+                      ) : (
+                        <FaTrash />
+                      )}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
@@ -513,34 +498,40 @@ const StudentManagement = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className={`text-2xl font-bold ${
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className={`text-xl sm:text-2xl font-bold ${
           darkMode ? 'text-white' : 'text-gray-800'
         }`}>Student Management</h1>
-        <div className="flex space-x-4">
+        
+        <div className="flex flex-wrap gap-2 sm:gap-4">
           <button
             onClick={handleDownloadTemplate}
             disabled={actionLoading === 'download'}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            className="flex items-center px-3 sm:px-4 py-2 bg-blue-500 text-white text-sm sm:text-base rounded hover:bg-blue-600 disabled:opacity-50"
           >
             {actionLoading === 'download' ? (
               <FaSpinner className="animate-spin mr-2" />
             ) : (
               <FaDownload className="mr-2" />
             )}
-            Download Template
+            <span className="hidden sm:inline">Download Template</span>
+            <span className="sm:hidden">Template</span>
           </button>
+          
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+            className="flex items-center px-3 sm:px-4 py-2 bg-indigo-500 text-white text-sm sm:text-base rounded hover:bg-indigo-600"
           >
             <FaUserPlus className="mr-2" />
-            Add Student
+            <span className="hidden sm:inline">Add Student</span>
+            <span className="sm:hidden">Add</span>
           </button>
-          <label className="flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer">
+          
+          <label className="flex items-center px-3 sm:px-4 py-2 bg-green-500 text-white text-sm sm:text-base rounded hover:bg-green-600 cursor-pointer">
             <FaFileUpload className="mr-2" />
-            Import CSV
+            <span className="hidden sm:inline">Import CSV</span>
+            <span className="sm:hidden">Import</span>
             <input
               type="file"
               accept=".csv"
@@ -564,8 +555,8 @@ const StudentManagement = () => {
       {showEditForm && <EditStudentForm />}
 
       {students.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-xl mb-6">No students found. Add some students to get started.</p>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-base sm:text-xl mb-6">No students found. Add some students to get started.</p>
         </div>
       ) : (
         renderStudentsTable()

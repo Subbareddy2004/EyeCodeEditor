@@ -9,15 +9,15 @@ const Home = () => {
     <div className={`min-h-screen ${
       darkMode ? 'bg-[#1a1f2c]' : 'bg-gray-100'
     }`}>
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className={`text-5xl font-bold mb-6 ${
+        <div className="text-center mb-8 sm:mb-16">
+          <h1 className={`text-3xl sm:text-5xl font-bold mb-4 sm:mb-6 ${
             darkMode ? 'text-white' : 'text-gray-800'
           }`}>
             Welcome to <span className="text-blue-500">Eye</span>Labs
           </h1>
-          <p className={`text-xl mb-8 max-w-2xl mx-auto ${
+          <p className={`text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto px-4 ${
             darkMode ? 'text-gray-300' : 'text-gray-600'
           }`}>
             A comprehensive coding education platform with interactive learning, 
@@ -25,9 +25,9 @@ const Home = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Code Execution Card */}
-          <div className={`p-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 ${
+          <div className={`p-6 sm:p-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 ${
             darkMode 
               ? 'bg-[#242b3d] border border-[#2d3548] hover:border-blue-500/30' 
               : 'bg-white hover:shadow-2xl'
@@ -68,7 +68,7 @@ const Home = () => {
           </div>
 
           {/* Assessment Tools Card */}
-          <div className={`p-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 ${
+          <div className={`p-6 sm:p-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 ${
             darkMode 
               ? 'bg-[#242b3d] border border-[#2d3548] hover:border-green-500/30' 
               : 'bg-white hover:shadow-2xl'
@@ -108,7 +108,7 @@ const Home = () => {
           </div>
 
           {/* Competition Platform Card */}
-          <div className={`p-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 ${
+          <div className={`p-6 sm:p-8 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 ${
             darkMode 
               ? 'bg-[#242b3d] border border-[#2d3548] hover:border-purple-500/30' 
               : 'bg-white hover:shadow-2xl'

@@ -137,29 +137,27 @@ const FacultyManagement = () => {
   };
 
   return (
-    <div className={`min-h-screen p-6 ${
-      darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'
-    }`}>
+    <div className={`min-h-screen p-4 sm:p-6 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className={`text-3xl font-bold ${
-            darkMode ? 'text-white' : 'text-gray-800'
-          }`}>
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
             Faculty Management
           </h1>
           
           {/* Action Buttons */}
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={handleDownloadTemplate}
-              className={`flex items-center px-4 py-2 ${
+              className={`flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base ${
                 darkMode 
                   ? 'bg-blue-600 hover:bg-blue-700' 
                   : 'bg-blue-500 hover:bg-blue-600'
               } text-white rounded`}
             >
               <FaDownload className="mr-2" />
-              Download Template
+              <span className="hidden sm:inline">Download Template</span>
+              <span className="sm:hidden">Template</span>
             </button>
             
             <button
@@ -168,22 +166,24 @@ const FacultyManagement = () => {
                 setFormData({ name: '', email: '', password: '' });
                 setShowModal(true);
               }}
-              className={`flex items-center px-4 py-2 ${
+              className={`flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base ${
                 darkMode 
                   ? 'bg-indigo-600 hover:bg-indigo-700' 
                   : 'bg-indigo-500 hover:bg-indigo-600'
               } text-white rounded`}
             >
               <FaUserPlus className="mr-2" />
-              Add Faculty
+              <span>Add Faculty</span>
             </button>
-            <label className={`flex items-center px-4 py-2 ${
+
+            <label className={`flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base ${
               darkMode 
                 ? 'bg-green-600 hover:bg-green-700' 
                 : 'bg-green-500 hover:bg-green-600'
             } text-white rounded cursor-pointer`}>
               <FaFileUpload className="mr-2" />
-              Import CSV
+              <span className="hidden sm:inline">Import CSV</span>
+              <span className="sm:hidden">Import</span>
               <input
                 type="file"
                 accept=".csv"
@@ -194,28 +194,25 @@ const FacultyManagement = () => {
           </div>
         </div>
 
+        {/* Content Section */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-20">
             <Loader size="large" />
-            <p className={`mt-4 text-lg ${
-              darkMode ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <p className={`mt-4 text-base sm:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               Loading faculty members...
             </p>
           </div>
         ) : faculty.length === 0 ? (
-          <div className={`text-center py-20 ${
-            darkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
-            <FaChalkboardTeacher className="mx-auto text-5xl mb-4 opacity-50" />
-            <p className="text-xl">No faculty members found</p>
+          <div className={`text-center py-12 sm:py-20 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <FaChalkboardTeacher className="mx-auto text-4xl sm:text-5xl mb-4 opacity-50" />
+            <p className="text-lg sm:text-xl">No faculty members found</p>
             <button
               onClick={() => {
                 setSelectedFaculty(null);
                 setFormData({ name: '', email: '', password: '' });
                 setShowModal(true);
               }}
-              className={`mt-4 flex items-center px-4 py-2 mx-auto ${
+              className={`mt-4 flex items-center px-4 py-2 mx-auto text-sm sm:text-base ${
                 darkMode 
                   ? 'bg-blue-600 hover:bg-blue-700' 
                   : 'bg-blue-500 hover:bg-blue-600'
@@ -226,7 +223,7 @@ const FacultyManagement = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {faculty.map((member) => (
               <div 
                 key={member._id} 
@@ -234,13 +231,13 @@ const FacultyManagement = () => {
                   darkMode 
                     ? 'bg-gray-800 border-gray-700' 
                     : 'bg-white border-gray-200'
-                } rounded-lg shadow-md p-6 border transition-transform hover:scale-105`}
+                } rounded-lg shadow-md p-4 sm:p-6 border transition-transform hover:scale-105`}
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center mb-2">
-                      <FaChalkboardTeacher className="text-blue-500 mr-2 text-xl" />
-                      <h2 className={`text-xl font-bold ${
+                      <FaChalkboardTeacher className="text-blue-500 mr-2 text-lg sm:text-xl flex-shrink-0" />
+                      <h2 className={`text-lg sm:text-xl font-bold truncate ${
                         darkMode ? 'text-white' : 'text-gray-800'
                       }`}>
                         {member.name}
@@ -248,12 +245,13 @@ const FacultyManagement = () => {
                     </div>
                     <p className={`${
                       darkMode ? 'text-gray-400' : 'text-gray-600'
-                    } text-sm`}>
+                    } text-sm truncate`}>
                       {member.email}
                     </p>
                   </div>
+
                   <div className="flex space-x-2">
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedFaculty(member);
                         setFormData({
@@ -263,29 +261,28 @@ const FacultyManagement = () => {
                         });
                         setShowModal(true);
                       }}
-                      className={`p-2 rounded-full hover:bg-opacity-10 ${
+                      className={`p-2 rounded-md ${
                         darkMode 
-                          ? 'hover:bg-gray-300 text-gray-300' 
-                          : 'hover:bg-gray-100 text-gray-600'
-                      } transition-colors`}
-                      title="Edit faculty"
+                          ? 'hover:bg-gray-700 text-blue-400' 
+                          : 'hover:bg-gray-100 text-blue-600'
+                      }`}
                     >
-                      <FaEdit className="w-4 h-4" />
+                      <FaEdit className="h-5 w-5" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(member._id)}
-                      className={`p-2 rounded-full hover:bg-opacity-10 ${
+                      className={`p-2 rounded-md ${
                         darkMode 
-                          ? 'hover:bg-red-300 text-red-400' 
-                          : 'hover:bg-red-100 text-red-500'
-                      } transition-colors`}
-                      title="Delete faculty"
+                          ? 'hover:bg-gray-700 text-red-400' 
+                          : 'hover:bg-gray-100 text-red-600'
+                      }`}
                     >
-                      <FaTrash className="w-4 h-4" />
+                      <FaTrash className="h-5 w-5" />
                     </button>
                   </div>
                 </div>
-                <div className={`text-sm ${
+
+                <div className={`text-xs sm:text-sm ${
                   darkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}>
                   <p>Department: {member.department || 'Not specified'}</p>
@@ -300,13 +297,14 @@ const FacultyManagement = () => {
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className={`${
-              darkMode ? 'bg-[#242b3d] border border-[#2d3548]' : 'bg-white'
-            } p-6 rounded-lg w-96`}>
-              <h2 className={`text-xl font-bold mb-4 ${
+              darkMode ? 'bg-[#242b3d] border-[#2d3548]' : 'bg-white'
+            } p-4 sm:p-6 rounded-lg w-full max-w-md mx-4`}>
+              <h2 className={`text-lg sm:text-xl font-bold mb-4 ${
                 darkMode ? 'text-white' : 'text-gray-800'
               }`}>
                 {selectedFaculty ? 'Edit Faculty' : 'Add Faculty'}
               </h2>
+              
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${
@@ -362,11 +360,11 @@ const FacultyManagement = () => {
                     {...(!selectedFaculty && { required: true })}
                   />
                 </div>
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className={`px-4 py-2 rounded-md ${
+                    className={`w-full sm:w-auto px-4 py-2 rounded-md ${
                       darkMode
                         ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -376,7 +374,7 @@ const FacultyManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    className={`px-4 py-2 rounded-md ${
+                    className={`w-full sm:w-auto px-4 py-2 rounded-md ${
                       darkMode
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-blue-500 text-white hover:bg-blue-600'

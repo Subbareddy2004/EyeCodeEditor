@@ -106,6 +106,66 @@ const AssignmentSubmissions = () => {
     }
   };
 
+  const renderMobileCard = (submission, index) => (
+    <div className={`mb-4 p-4 rounded-lg ${
+      darkMode ? 'bg-gray-800' : 'bg-white'
+    } shadow`}>
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <div className="font-medium text-lg">{submission.student.name}</div>
+          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            {submission.student.email}
+          </div>
+        </div>
+        <div className="text-lg font-bold">#{index + 1}</div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Status</div>
+          <span className={`px-2 py-1 rounded-full text-sm ${
+            submission.status === 'PASSED'
+              ? 'bg-green-100 text-green-800'
+              : submission.status === 'FAILED'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-yellow-100 text-yellow-800'
+          }`}>
+            {submission.status}
+          </span>
+        </div>
+        <div>
+          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Score</div>
+          <span className={`font-medium ${
+            submission.score > 0 
+              ? 'text-green-500' 
+              : darkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            {submission.score > 0 ? `${submission.score}%` : 'N/A'}
+          </span>
+        </div>
+        <div>
+          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Problems</div>
+          <div>{submission.problemsCompleted}</div>
+        </div>
+        <div>
+          <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Last Submission</div>
+          <div>{submission.lastSubmission 
+            ? new Date(submission.lastSubmission).toLocaleDateString()
+            : 'Not submitted'}
+          </div>
+        </div>
+      </div>
+      
+      <button
+        onClick={() => handleViewCode(submission.student._id)}
+        className="w-full mt-2 flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        <FaCode className="mr-2" />
+        View Code
+      </button>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -115,13 +175,18 @@ const AssignmentSubmissions = () => {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center mb-8">
-        <Link to="/faculty/assignments" className="text-blue-500 hover:text-blue-600 mr-4">
-          <FaArrowLeft className="text-xl" />
+    <div className="p-4 sm:p-6 md:p-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <Link to="/faculty/assignments" 
+          className="text-blue-500 hover:text-blue-600 inline-flex items-center">
+          <FaArrowLeft className="text-xl mr-2" />
+          <span>Back to Assignments</span>
         </Link>
         <div>
-          <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          <h1 className={`text-2xl sm:text-3xl font-bold ${
+            darkMode ? 'text-white' : 'text-gray-800'
+          }`}>
             {assignment?.title}
           </h1>
           <p className={`mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -130,70 +195,84 @@ const AssignmentSubmissions = () => {
         </div>
       </div>
 
-      <div className={`rounded-lg shadow overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-        <table className="min-w-full">
-          <thead className="bg-blue-500 text-white">
-            <tr>
-              <th className="px-6 py-3 text-left">RANK</th>
-              <th className="px-6 py-3 text-left">STUDENT</th>
-              <th className="px-6 py-3 text-left">STATUS</th>
-              <th className="px-6 py-3 text-left">PROBLEMS COMPLETED</th>
-              <th className="px-6 py-3 text-left">LAST SUBMISSION</th>
-              <th className="px-6 py-3 text-left">SCORE</th>
-              <th className="px-6 py-3 text-left">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y ${darkMode ? 'divide-gray-700 text-gray-200' : 'divide-gray-200'}`}>
-            {getSortedSubmissions().map((submission, index) => (
-              <tr key={submission.student.email}>
-                <td className="px-6 py-4">
-                  {index + 1}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="font-medium">{submission.student.name}</div>
-                  <div className="text-sm text-gray-500">{submission.student.email}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-sm ${
-                    submission.status === 'PASSED'
-                      ? 'bg-green-100 text-green-800'
-                      : submission.status === 'FAILED'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {submission.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  {submission.problemsCompleted}
-                </td>
-                <td className="px-6 py-4">
-                  {submission.lastSubmission 
-                    ? new Date(submission.lastSubmission).toLocaleString()
-                    : 'Not submitted'}
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`font-medium ${
-                    submission.score > 0 
-                      ? 'text-green-500' 
-                      : darkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    {submission.score > 0 ? `${submission.score}%` : 'N/A'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleViewCode(submission.student._id)}
-                    className="flex items-center text-blue-500 hover:text-blue-600"
-                  >
-                    <FaCode className="mr-2" />
-                    View Code
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <div className={`rounded-lg shadow overflow-hidden ${
+          darkMode ? 'bg-gray-800' : 'bg-white'
+        }`}>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-blue-500 text-white">
+                <tr>
+                  <th className="px-6 py-3 text-left">RANK</th>
+                  <th className="px-6 py-3 text-left">STUDENT</th>
+                  <th className="px-6 py-3 text-left">STATUS</th>
+                  <th className="px-6 py-3 text-left">PROBLEMS COMPLETED</th>
+                  <th className="px-6 py-3 text-left">LAST SUBMISSION</th>
+                  <th className="px-6 py-3 text-left">SCORE</th>
+                  <th className="px-6 py-3 text-left">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${darkMode ? 'divide-gray-700 text-gray-200' : 'divide-gray-200'}`}>
+                {getSortedSubmissions().map((submission, index) => (
+                  <tr key={submission.student.email}>
+                    <td className="px-6 py-4">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{submission.student.name}</div>
+                      <div className="text-sm text-gray-500">{submission.student.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-sm ${
+                        submission.status === 'PASSED'
+                          ? 'bg-green-100 text-green-800'
+                          : submission.status === 'FAILED'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {submission.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {submission.problemsCompleted}
+                    </td>
+                    <td className="px-6 py-4">
+                      {submission.lastSubmission 
+                        ? new Date(submission.lastSubmission).toLocaleString()
+                        : 'Not submitted'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`font-medium ${
+                        submission.score > 0 
+                          ? 'text-green-500' 
+                          : darkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                        {submission.score > 0 ? `${submission.score}%` : 'N/A'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleViewCode(submission.student._id)}
+                        className="flex items-center text-blue-500 hover:text-blue-600"
+                      >
+                        <FaCode className="mr-2" />
+                        View Code
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden">
+        {getSortedSubmissions().map((submission, index) => 
+          renderMobileCard(submission, index)
+        )}
       </div>
 
       {/* Add Code Modal */}
@@ -203,7 +282,7 @@ const AssignmentSubmissions = () => {
           onClose={() => setShowCodeModal(false)}
           title="Student Submissions"
         >
-          <div className="space-y-6">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
             {selectedSubmission.map((sub, index) => (
               <div key={index} className={`p-4 rounded-lg ${
                 darkMode ? 'bg-gray-700' : 'bg-gray-50'
