@@ -15,10 +15,10 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     activeContests: 0,
     participatedContests: 0,
-    totalSubmissions: 0,
-    successRate: 0
+    completedAssignments: 0
   });
   const [submissionData, setSubmissionData] = useState([]);
+  const [performanceData, setPerformanceData] = useState([]);
 
   useEffect(() => {
     fetchDashboardStats();
@@ -35,11 +35,10 @@ const Dashboard = () => {
       setStats({
         activeContests: response.data.stats.activeContests || 0,
         participatedContests: response.data.stats.participatedContests || 0,
-        totalSubmissions: response.data.stats.totalSubmissions || 0,
-        successRate: response.data.stats.successRate || 0
+        completedAssignments: response.data.stats.completedAssignments || 0
       });
-      console.log(response.data);
-      setSubmissionData(response.data.submissionStats);
+
+      setPerformanceData(response.data.performanceStats || []);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       toast.error('Failed to load dashboard statistics');
@@ -81,7 +80,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <StatCard
                 title="Active Contests"
                 value={stats.activeContests}
@@ -95,39 +94,44 @@ const Dashboard = () => {
                 color="text-blue-500"
               />
               <StatCard
-                title="Total Submissions"
-                value={stats.totalSubmissions}
+                title="Completed Assignments"
+                value={stats.completedAssignments}
                 icon={<FaCheckCircle />}
                 color="text-purple-500"
-              />
-              <StatCard
-                title="Success Rate"
-                value={`${stats.successRate}%`}
-                icon={<FaChartLine />}
-                color="text-orange-500"
               />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Submission Statistics */}
+              {/* Performance Statistics */}
               <div className={`p-6 rounded-lg shadow-md ${
                 darkMode ? 'bg-[#242b3d] border border-gray-700' : 'bg-white'
               }`}>
                 <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                  Submission History
+                  Assignment Progress
                 </h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={submissionData}>
+                    <BarChart data={performanceData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
+                      <XAxis dataKey="category" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="submissions" fill="#4F46E5" name="Total Submissions" />
-                      <Bar dataKey="passed" fill="#22C55E" name="Passed" />
+                      <Bar dataKey="total" fill="#4F46E5" name="Total Assignments" />
+                      <Bar dataKey="completed" fill="#22C55E" name="Completed" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                {/* Add completion percentage */}
+                {performanceData.length > 0 && (
+                  <div className="mt-4 text-center">
+                    <p className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Completion Rate: 
+                      <span className="font-bold ml-2">
+                        {Math.round((performanceData[0].completed / performanceData[0].total) * 100 || 0)}%
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Quick Actions */}

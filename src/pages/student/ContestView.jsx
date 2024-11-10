@@ -146,9 +146,18 @@ const ContestView = () => {
     }
   };
 
+  useEffect(() => {
+    if (selectedProblem) {
+      fetchLastSubmission(selectedProblem.problem._id);
+    }
+  }, [selectedProblem]);
+
   const fetchLastSubmission = async (problemId) => {
     try {
-      const response = await axios.get(`/contests/${id}/problems/${problemId}/submissions`);
+      const response = await axios.get(
+        `/contests/${id}/problems/${problemId}/submissions`
+      );
+      
       if (response.data && response.data.code) {
         setCode(response.data.code);
         setLanguage(response.data.language);
@@ -225,6 +234,11 @@ const ContestView = () => {
           }
 
           toast.success('Problem completed successfully! 🎉');
+        } else {
+          await axios.post(
+            `/contests/${id}/problems/${selectedProblem.problem._id}/store-submission`,
+            { code, language, status: 'FAILED' }
+          );
         }
       }
     } catch (error) {
