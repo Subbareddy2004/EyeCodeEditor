@@ -1,9 +1,27 @@
-# React + Vite
+# EyeCodeEditor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+EyeCodeEditor is a frontend application designed to provide a seamless and responsive code editing experience with various customization features.
 
-Currently, two official plugins are available:
+## Installation and Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-"# EyeCodeEditor" 
+Follow these steps to clone the repository and run the project locally.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed on your system.
+
+### Clone the Repository
+
+```bash
+
+# Clone the repository
+git clone https://github.com/Subbareddy2004/EyeCodeEditor.git
+
+# Navigate to the project directory
+cd EyeCodeEditor 
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
