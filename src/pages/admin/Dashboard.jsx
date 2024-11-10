@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getAuthHeaders } from '../../utils/authUtils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 import { FaGraduationCap, FaChalkboardTeacher, FaCode, FaTrophy, FaClipboardList } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
 import { toast } from 'react-hot-toast';
@@ -9,52 +17,63 @@ import Loader from '../../components/Loader';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+const timeRangeOptions = [
+  { label: 'Last 24 Hours', value: '24h' },
+  { label: 'Last Week', value: '1w' },
+  { label: 'Last Month', value: '1m' },
+  { label: 'Last 3 Months', value: '3m' },
+  { label: 'Last 6 Months', value: '6m' },
+  { label: 'Last Year', value: '1y' },
+  { label: 'All Time', value: 'all' }
+];
+
 const Dashboard = () => {
   const { darkMode } = useTheme();
-  const [loading, setLoading] = useState(true);
+  const [selectedTimeRange, setSelectedTimeRange] = useState('1w');
+  const [submissionStats, setSubmissionStats] = useState([]);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalFaculty: 0,
     totalProblems: 0,
     totalContests: 0,
-    totalSubmissions: 0,
-    totalAssignments: 0
+    totalAssignments: 0,
+    totalSubmissions: 0
   });
-  const [usageStats, setUsageStats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats();
-  }, []);
+    fetchDashboardData();
+  }, [selectedTimeRange]);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      setLoading(true);
       const response = await axios.get(
-        `${API_URL}/admin/dashboard`,
+        `${API_URL}/admin/dashboard?timeRange=${selectedTimeRange}`,
         { headers: getAuthHeaders() }
       );
       
-      setStats({
-        totalStudents: response.data.stats.totalStudents || 0,
-        totalFaculty: response.data.stats.totalFaculty || 0,
-        totalProblems: response.data.stats.totalProblems || 0,
-        totalContests: response.data.stats.totalContests || 0,
-        totalSubmissions: response.data.stats.totalSubmissions || 0,
-        totalAssignments: response.data.stats.totalAssignments || 0
-      });
-      
-      // Format dates for the chart
-      const formattedStats = response.data.usageStats.map(stat => ({
-        ...stat,
-        name: new Date(stat.name).toLocaleDateString()
-      }));
-      setUsageStats(formattedStats);
+      if (response.data) {
+        setSubmissionStats(response.data.submissionStats || []);
+        setStats(response.data.stats || {
+          totalStudents: 0,
+          totalFaculty: 0,
+          totalProblems: 0,
+          totalContests: 0,
+          totalAssignments: 0,
+          totalSubmissions: 0
+        });
+      }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      toast.error('Failed to load dashboard statistics');
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTimeRangeChange = async (e) => {
+    const newTimeRange = e.target.value;
+    setSelectedTimeRange(newTimeRange);
   };
 
   if (loading) {
@@ -121,41 +140,54 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Usage Statistics Chart */}
-      <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-6`}>
-        <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-          Platform Usage Statistics
-        </h2>
-        <div className="overflow-x-auto">
-          {usageStats.length > 0 ? (
-            <BarChart 
-              width={800} 
-              height={400} 
-              data={usageStats}
-              className={darkMode ? 'text-white' : ''}
+      {/* Submissions Graph */}
+      <div className={`p-6 rounded-lg shadow-md ${
+        darkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Submission Statistics
+          </h2>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedTimeRange}
+              onChange={handleTimeRangeChange}
+              className={`p-2 rounded ${
+                darkMode 
+                  ? 'bg-gray-700 text-white border-gray-600' 
+                  : 'bg-white text-gray-800 border-gray-300'
+              }`}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+              {timeRangeOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={submissionStats}>
+              <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="name" 
-                stroke={darkMode ? '#9CA3AF' : '#4B5563'}
+                dataKey="date" 
+                tick={{ fontSize: 12 }}
+                interval={0}
+                angle={-45}
+                textAnchor="end"
               />
-              <YAxis stroke={darkMode ? '#9CA3AF' : '#4B5563'} />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: darkMode ? '#1F2937' : 'white',
-                  border: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`,
-                  color: darkMode ? 'white' : 'black'
-                }}
+              <YAxis />
+              <Tooltip />
+              <Bar 
+                dataKey="submissions" 
+                name="Submissions" 
+                fill="#4F46E5"
+                radius={[4, 4, 0, 0]} 
               />
-              <Legend />
-              <Bar dataKey="totalSubmissions" fill="#8884d8" name="Submissions" />
-              <Bar dataKey="avgExecutionTime" fill="#82ca9d" name="Avg. Execution Time (ms)" />
             </BarChart>
-          ) : (
-            <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              No usage statistics available
-            </div>
-          )}
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
