@@ -45,6 +45,9 @@ import ContestList from './pages/student/ContestList';
 import ContestManagement from './pages/faculty/ContestManagement';
 import ContestForm from './pages/faculty/ContestForm';
 import ContestLeaderboard from './components/faculty/ContestLeaderboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
@@ -118,6 +121,8 @@ function App() {
           <Route path="/faculty/problems" element={<ProblemList user={user} onLogout={logout} />} />
           <Route path="/student/assignments/:assignmentId" element={<AssignmentView />} />
           <Route path="/student/practice/:id" element={<PracticeProblem />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </main>
     </div>

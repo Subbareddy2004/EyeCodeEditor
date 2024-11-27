@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'react-hot-toast';
@@ -89,6 +89,14 @@ const Login = () => {
               }`}
               required
             />
+          </div>
+          <div className="text-center mt-2 mb-4">
+            <Link
+              to="/forgot-password"
+              className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+            >
+              Forgot Password?
+            </Link>
           </div>
           <button
             type="submit"
