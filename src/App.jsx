@@ -47,6 +47,7 @@ import ContestForm from './pages/faculty/ContestForm';
 import ContestLeaderboard from './components/faculty/ContestLeaderboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import IDE from './pages/student/IDE';
 
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -123,6 +124,7 @@ function App() {
           <Route path="/student/practice/:id" element={<PracticeProblem />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="student/ide" element={<IDE />} />
         </Routes>
       </main>
     </div>
@@ -151,6 +153,7 @@ const StudentRoutes = ({ user }) => (
     <Route path="practice/:id" element={<PracticeProblem />} />
     <Route path="contests" element={<ContestList user={user} />} />
     <Route path="contests/:id" element={<ContestView user={user} />} />
+    <Route path="ide" element={<IDE />} />
   </Routes>
 )
 

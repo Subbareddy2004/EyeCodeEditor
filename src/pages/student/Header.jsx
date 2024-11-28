@@ -66,6 +66,9 @@ const StudentHeader = ({ user, onLogout }) => {
             <NavLink to="/student/leaderboard" icon={FaChartLine} color="text-red-500">
               Leaderboard
             </NavLink>
+            <NavLink to="/student/ide" icon={FaCode} color="text-blue-500">
+              IDE
+            </NavLink>
 
             {/* Theme Toggle */}
             <button
@@ -174,6 +177,9 @@ const StudentHeader = ({ user, onLogout }) => {
               </MobileNavLink>
               <MobileNavLink to="/student/leaderboard" icon={FaChartLine} color="text-red-500">
                 Leaderboard
+              </MobileNavLink>
+              <MobileNavLink to="/student/ide" icon={FaCode} color="text-blue-500">
+                IDE
               </MobileNavLink>
               <MobileNavLink to="/student/profile" icon={FaUserCircle} color="text-blue-500">
                 Profile
