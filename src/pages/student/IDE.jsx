@@ -3,6 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { cpp } from '@codemirror/lang-cpp';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
+import { sql } from '@codemirror/lang-sql';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FaPlay, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
@@ -42,14 +43,74 @@ int main() {
     // Your code here
     printf("Hello, World!\n");
     return 0;
-}`
+}`,
+  
+  sql: `-- SQL Template
+-- Create a sample table
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE
+);
+
+-- Insert some data
+INSERT INTO users (name, email) VALUES
+    ('John Doe', 'john@example.com'),
+    ('Jane Smith', 'jane@example.com');
+
+-- Query the data
+SELECT * FROM users;`,
+
+  mysql: `-- MySQL Template
+CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2)
+);
+
+-- Insert sample data
+INSERT INTO products (name, price) VALUES
+    ('Laptop', 999.99),
+    ('Mouse', 29.99);
+
+-- Query products
+SELECT * FROM products;`,
+
+  postgresql: `-- PostgreSQL Template
+CREATE TABLE IF NOT EXISTS employees (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    department VARCHAR(50),
+    salary NUMERIC(10,2)
+);
+
+-- Insert sample data
+INSERT INTO employees (name, department, salary) VALUES
+    ('Alice Johnson', 'Engineering', 75000),
+    ('Bob Wilson', 'Marketing', 65000);
+
+-- Query employees
+SELECT * FROM employees;`
 };
 
 const LANGUAGE_MAPPINGS = {
   python: { extension: 'py', codexKey: 'py' },
   cpp: { extension: 'cpp', codexKey: 'cpp' },
   java: { extension: 'java', codexKey: 'java' },
-  c: { extension: 'c', codexKey: 'c' }
+  c: { extension: 'c', codexKey: 'c' },
+  sql: { extension: 'sql', codexKey: 'sql' },
+  mysql: { extension: 'sql', codexKey: 'mysql' },
+  postgresql: { extension: 'sql', codexKey: 'postgresql' }
+};
+
+const JUDGE0_LANGUAGE_IDS = {
+  python: 71,    // Python (3.8.1)
+  cpp: 54,       // C++ (GCC 9.2.0)
+  java: 62,      // Java (OpenJDK 13.0.1)
+  c: 50,         // C (GCC 9.2.0)
+  sql: 82,       // SQL (SQLite 3.27.2)
+  mysql: 82,     // MySQL
+  postgresql: 82 // PostgreSQL
 };
 
 const IDE = () => {
@@ -76,36 +137,50 @@ const IDE = () => {
     try {
       const response = await axios.post('/code/execute', {
         code,
-        language: LANGUAGE_MAPPINGS[language].codexKey,
+        language: language,
+        language_id: JUDGE0_LANGUAGE_IDS[language],
         input
       });
 
-      if (response.data.error) {
-        setError(response.data.error);
-        toast.error('Code execution failed');
-      } else {
-        setOutput(response.data.output);
-        if (response.data.status.id === 3) { // Status 3 means Accepted
+      if (response.data.token) {
+        let result = await axios.get(`/code/status/${response.data.token}`);
+        
+        if (result.data.stdout) {
+          setOutput(result.data.stdout);
           toast.success('Code executed successfully');
-        } else {
-          setError(response.data.error);
+        } else if (result.data.stderr) {
+          setError(result.data.stderr);
           toast.error('Code execution failed');
+        } else if (result.data.compile_output) {
+          setError(result.data.compile_output);
+          toast.error('Compilation failed');
         }
       }
     } catch (error) {
       console.error('Code execution error:', error);
-      setError(error.response?.data?.error || 'Error executing code. Please try again.');
+      setError(error.response?.data?.error || 'Error executing code');
       toast.error('Failed to execute code');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const languageExtensions = {
-    python: python(),
-    cpp: cpp(),
-    java: java(),
-    c: cpp() // Using C++ extension for C as they share similar syntax
+  const getLanguageExtension = (lang) => {
+    switch (lang) {
+      case 'python':
+        return python();
+      case 'cpp':
+      case 'c':
+        return cpp();
+      case 'java':
+        return java();
+      case 'sql':
+      case 'mysql':
+      case 'postgresql':
+        return sql();
+      default:
+        return python();
+    }
   };
 
   return (
@@ -125,6 +200,9 @@ const IDE = () => {
                 <option value="cpp">C++</option>
                 <option value="java">Java</option>
                 <option value="c">C</option>
+                <option value="sql">SQL</option>
+                <option value="mysql">MySQL</option>
+                <option value="postgresql">PostgreSQL</option>
               </select>
 
               <button
@@ -157,7 +235,7 @@ const IDE = () => {
                 value={code}
                 height="500px"
                 theme={darkMode ? 'dark' : 'light'}
-                extensions={[languageExtensions[language]]}
+                extensions={[getLanguageExtension(language)]}
                 onChange={(value) => setCode(value)}
               />
             </div>
