@@ -3,7 +3,7 @@ import { getFacultyList, addFaculty, updateFaculty, deleteFaculty } from '../../
 import { toast } from 'react-hot-toast';
 import { 
   FaEdit, FaTrash, FaPlus, FaUserPlus, 
-  FaFileUpload, FaDownload, FaChalkboardTeacher 
+  FaFileUpload, FaDownload, FaChalkboardTeacher, FaUsers, FaTimes, FaUpload 
 } from 'react-icons/fa';
 import axios from 'axios';
 import { getAuthHeaders } from '../../utils/authUtils';
@@ -24,6 +24,18 @@ const FacultyManagement = () => {
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const { darkMode } = useTheme();
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [file, setFile] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
+
+  // Add student form state
+  const [newStudent, setNewStudent] = useState({
+    name: '',
+    email: '',
+    registerNumber: '',
+    password: ''
+  });
 
   useEffect(() => {
     fetchFacultyList();
@@ -85,15 +97,12 @@ const FacultyManagement = () => {
   };
 
   const handleDownloadTemplate = () => {
-    // Create CSV content
-    const csvContent = "name,email,department\nJohn Doe,john@example.com,Computer Science\n";
-    
-    // Create blob and download
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const template = 'Name,Registration Number,Email\n';
+    const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'faculty_template.csv';
+    a.download = 'student_template.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -133,6 +142,154 @@ const FacultyManagement = () => {
       fetchFacultyList();
     } catch (error) {
       toast.error('Error importing faculty members');
+    }
+  };
+
+  // Function to fetch students for a specific faculty
+  const fetchFacultyStudents = async (facultyId) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/admin/faculty/${facultyId}/students`);
+      console.log('Fetched students:', response.data);
+      setStudents(response.data || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast.error('Failed to fetch students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle opening the student management modal
+  const handleManageStudents = async (faculty) => {
+    setSelectedFaculty(faculty);
+    setShowStudentModal(true);
+    await fetchFacultyStudents(faculty._id);
+  };
+
+  // Handle adding a new student
+  const handleAddStudent = async () => {
+    try {
+      if (!selectedFaculty) {
+        toast.error('Please select a faculty');
+        return;
+      }
+
+      if (!newStudent.name || !newStudent.email || !newStudent.registerNumber) {
+        toast.error('Please fill all fields');
+        return;
+      }
+
+      const response = await axios.post(`/admin/faculty/${selectedFaculty._id}/students`, {
+        name: newStudent.name,
+        email: newStudent.email,
+        regNumber: newStudent.registerNumber
+      });
+
+      toast.success('Student added successfully');
+      setNewStudent({ name: '', email: '', registerNumber: '' });
+      await fetchFacultyStudents(selectedFaculty._id);
+    } catch (error) {
+      console.error('Error adding student:', error);
+      toast.error(error.response?.data?.message || 'Error adding student');
+    }
+  };
+
+  // Function to handle bulk upload
+  const handleBulkUpload = async () => {
+    if (!file || !selectedFaculty) {
+      toast.error('Please select a file and faculty first');
+      return;
+    }
+
+    // Log file details
+    console.log('Uploading file:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(
+        `/admin/faculty/${selectedFaculty._id}/students/bulk`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      console.log('Upload response:', response.data);
+
+      if (response.data.errors && response.data.errors.length > 0) {
+        toast.warning(`Imported ${response.data.successCount} students with ${response.data.errors.length} errors`);
+        console.error('Import errors:', response.data.errors);
+      } else {
+        toast.success(`Successfully imported ${response.data.count} students`);
+      }
+      
+      setFile(null);
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+      
+      await fetchFacultyStudents(selectedFaculty._id);
+    } catch (error) {
+      console.error('Bulk upload error:', error.response?.data || error);
+      toast.error(error.response?.data?.message || 'Error uploading students');
+    }
+  };
+
+  // Add file selection handler
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (!selectedFile.name.endsWith('.csv')) {
+        toast.error('Please select a CSV file');
+        e.target.value = '';
+        return;
+      }
+      setFile(selectedFile);
+      toast.info('File selected: ' + selectedFile.name);
+    }
+  };
+
+  // Handle delete student
+  const handleDeleteStudent = async (studentId) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) return;
+    try {
+      await axios.delete(`/admin/faculty/${selectedFaculty._id}/students/${studentId}`);
+      toast.success('Student deleted successfully');
+      await fetchFacultyStudents(selectedFaculty._id);
+    } catch (error) {
+      toast.error('Error deleting student');
+    }
+  };
+
+  // Function to handle student edit
+  const handleEditStudent = async (studentId) => {
+    try {
+      if (!editingStudent) return;
+      
+      const response = await axios.put(
+        `/admin/faculty/${selectedFaculty._id}/students/${studentId}`,
+        {
+          name: editingStudent.name,
+          email: editingStudent.email,
+          regNumber: editingStudent.regNumber
+        }
+      );
+
+      toast.success('Student updated successfully');
+      setEditingStudent(null);
+      await fetchFacultyStudents(selectedFaculty._id);
+    } catch (error) {
+      console.error('Error updating student:', error);
+      toast.error(error.response?.data?.message || 'Error updating student');
     }
   };
 
@@ -279,6 +436,21 @@ const FacultyManagement = () => {
                     >
                       <FaTrash className="h-5 w-5" />
                     </button>
+                    <button
+                      onClick={() => {
+                        setSelectedFaculty(member);
+                        setShowStudentModal(true);
+                        fetchFacultyStudents(member._id);
+                      }}
+                      className={`p-2 rounded-md ${
+                        darkMode 
+                          ? 'hover:bg-gray-700 text-blue-400' 
+                          : 'hover:bg-gray-100 text-blue-600'
+                      }`}
+                      title="Manage Students"
+                    >
+                      <FaUsers className="h-5 w-5" />
+                    </button>
                   </div>
                 </div>
 
@@ -384,6 +556,219 @@ const FacultyManagement = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Student Management Modal */}
+        {showStudentModal && selectedFaculty && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className={`relative w-full max-w-4xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg max-h-[90vh] overflow-y-auto`}>
+              {/* Close Button */}
+              <button
+                onClick={() => setShowStudentModal(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                <FaTimes size={24} />
+              </button>
+
+              <h2 className="text-xl font-bold mb-4">
+                Manage Students - {selectedFaculty.name}
+              </h2>
+
+              {/* Bulk Upload Section */}
+              <div className="mb-6 p-4 border rounded">
+                <h3 className="text-lg font-semibold mb-2">Bulk Upload</h3>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className={`flex items-center px-4 py-2 rounded ${
+                      darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                    } text-white`}
+                  >
+                    <FaDownload className="mr-2" /> Download Template
+                  </button>
+                  
+                  <label className={`flex items-center px-4 py-2 rounded cursor-pointer ${
+                    darkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'
+                  } text-white`}>
+                    <FaUpload className="mr-2" />
+                    {file ? 'File Selected' : 'Choose File'}
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {file && (
+                    <button
+                      onClick={handleBulkUpload}
+                      className={`px-4 py-2 rounded ${
+                        darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'
+                      } text-white`}
+                    >
+                      Upload Students
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Add Student Form */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Add Student</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    className={`w-full p-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                    value={newStudent.name}
+                    onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Register Number"
+                    className={`w-full p-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                    value={newStudent.registerNumber}
+                    onChange={(e) => setNewStudent({ ...newStudent, registerNumber: e.target.value })}
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    className={`w-full p-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                    value={newStudent.email}
+                    onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                  />
+                  <button
+                    onClick={() => handleAddStudent()}
+                    className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Add Student
+                  </button>
+                </div>
+              </div>
+
+              {/* Students List */}
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Students</h3>
+                {loading ? (
+                  <p>Loading students...</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                          <th className="p-2 text-left">Name</th>
+                          <th className="p-2 text-left">Register Number</th>
+                          <th className="p-2 text-left">Email</th>
+                          <th className="p-2 text-left">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {students.map((student) => (
+                          <tr key={student._id} className="border-b">
+                            {editingStudent?.id === student._id ? (
+                              <>
+                                <td className="p-2">
+                                  <input
+                                    type="text"
+                                    value={editingStudent.name}
+                                    onChange={(e) => setEditingStudent({
+                                      ...editingStudent,
+                                      name: e.target.value
+                                    })}
+                                    className={`w-full p-1 border rounded ${
+                                      darkMode 
+                                        ? 'bg-gray-700 border-gray-600 text-white' 
+                                        : 'bg-white border-gray-300'
+                                    }`}
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <input
+                                    type="text"
+                                    value={editingStudent.regNumber}
+                                    onChange={(e) => setEditingStudent({
+                                      ...editingStudent,
+                                      regNumber: e.target.value
+                                    })}
+                                    className={`w-full p-1 border rounded ${
+                                      darkMode 
+                                        ? 'bg-gray-700 border-gray-600 text-white' 
+                                        : 'bg-white border-gray-300'
+                                    }`}
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <input
+                                    type="email"
+                                    value={editingStudent.email}
+                                    onChange={(e) => setEditingStudent({
+                                      ...editingStudent,
+                                      email: e.target.value
+                                    })}
+                                    className={`w-full p-1 border rounded ${
+                                      darkMode 
+                                        ? 'bg-gray-700 border-gray-600 text-white' 
+                                        : 'bg-white border-gray-300'
+                                    }`}
+                                  />
+                                </td>
+                                <td className="p-2">
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleEditStudent(student._id)}
+                                      className="text-green-500 hover:text-green-600"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingStudent(null)}
+                                      className="text-gray-500 hover:text-gray-600"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="p-2">{student.name}</td>
+                                <td className="p-2">{student.regNumber}</td>
+                                <td className="p-2">{student.email}</td>
+                                <td className="p-2">
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => setEditingStudent({
+                                        id: student._id,
+                                        name: student.name,
+                                        regNumber: student.regNumber,
+                                        email: student.email
+                                      })}
+                                      className="text-blue-500 hover:text-blue-600"
+                                      title="Edit Student"
+                                    >
+                                      <FaEdit />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteStudent(student._id)}
+                                      className="text-red-500 hover:text-red-600"
+                                      title="Delete Student"
+                                    >
+                                      <FaTrash />
+                                    </button>
+                                  </div>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

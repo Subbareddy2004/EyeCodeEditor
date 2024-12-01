@@ -48,6 +48,8 @@ import ContestLeaderboard from './components/faculty/ContestLeaderboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import IDE from './pages/student/IDE';
+import FacultyForm from './pages/admin/FacultyForm';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -136,6 +138,22 @@ const AdminRoutes = ({ user }) => (
     <Route path="dashboard" element={<AdminDashboard user={user} />} />
     <Route path="faculty" element={<FacultyManagement user={user} />} />
     <Route path="students" element={<Students user={user} />} />
+    <Route 
+      path="/admin/faculty/create" 
+      element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <FacultyForm />
+        </ProtectedRoute>
+      } 
+    />
+    <Route 
+      path="/admin/students" 
+      element={
+        <ProtectedRoute allowedRoles={['admin']}>
+          <StudentManagement />
+        </ProtectedRoute>
+      } 
+    />
   </Routes>
 );
 
