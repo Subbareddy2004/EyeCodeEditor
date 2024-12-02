@@ -50,6 +50,10 @@ import ResetPassword from './pages/ResetPassword';
 import IDE from './pages/student/IDE';
 import FacultyForm from './pages/admin/FacultyForm';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminContestManagement from './pages/admin/AdminContestManagement';
+import AdminContestForm from './pages/admin/AdminContestForm';
+import AdminContestLeaderboard from './pages/admin/AdminContestLeaderboard';
+import IssueManagement from './pages/admin/IssueManagement';
 
 
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -127,6 +131,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="student/ide" element={<IDE />} />
+          <Route path="/admin/issues" element={<IssueManagement />} />
         </Routes>
       </main>
     </div>
@@ -154,6 +159,12 @@ const AdminRoutes = ({ user }) => (
         </ProtectedRoute>
       } 
     />
+    <Route path="/admin">
+      <Route path="contests" element={<AdminContestManagement />} />
+      <Route path="contests/create" element={<AdminContestForm />} />
+      <Route path="contests/:id/edit" element={<AdminContestForm />} />
+      <Route path="contests/:id/leaderboard" element={<AdminContestLeaderboard />} />
+    </Route>
   </Routes>
 );
 

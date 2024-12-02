@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FaTrophy, FaCode, FaCheckCircle, FaChartLine } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
-import { toast } from 'react-toastify';
+import ReportForm from './ReportForm';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -156,6 +156,10 @@ const Dashboard = () => {
                   </Link>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-8">
+              <ReportForm />
             </div>
           </>
         )}

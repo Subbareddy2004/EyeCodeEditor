@@ -4,7 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
   FaMoon, FaSun, FaTachometerAlt, FaChalkboardTeacher,
-  FaUserGraduate, FaSignOutAlt, FaUserShield, FaBars, FaTimes
+  FaUserGraduate, FaSignOutAlt, FaUserShield, FaBars, FaTimes,
+  FaExclamationCircle
 } from 'react-icons/fa';
 
 const AdminHeader = () => {
@@ -16,7 +17,9 @@ const AdminHeader = () => {
   const navItems = [
     { path: '/admin/dashboard', icon: FaTachometerAlt, label: 'Dashboard' },
     { path: '/admin/faculty', icon: FaChalkboardTeacher, label: 'Faculty' },
-    { path: '/admin/students', icon: FaUserGraduate, label: 'Students' }
+    { path: '/admin/students', icon: FaUserGraduate, label: 'Students' },
+    { path: '/admin/contests', icon: FaTachometerAlt, label: 'Contests' },
+    { path: '/admin/issues', icon: FaExclamationCircle, label: 'Issues' }
   ];
 
   const isActive = (path) => {
