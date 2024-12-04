@@ -18,7 +18,6 @@ const AdminHeader = () => {
     { path: '/admin/dashboard', icon: FaTachometerAlt, label: 'Dashboard' },
     { path: '/admin/faculty', icon: FaChalkboardTeacher, label: 'Faculty' },
     { path: '/admin/students', icon: FaUserGraduate, label: 'Students' },
-    { path: '/admin/contests', icon: FaTachometerAlt, label: 'Contests' },
     { path: '/admin/issues', icon: FaExclamationCircle, label: 'Issues' }
   ];
 
