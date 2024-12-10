@@ -137,25 +137,22 @@ const IDE = () => {
     try {
       const response = await axios.post('/code/execute', {
         code,
-        language: language,
-        language_id: JUDGE0_LANGUAGE_IDS[language],
+        language,
         input
       });
 
-      if (response.data.token) {
-        let result = await axios.get(`/code/status/${response.data.token}`);
-        
-        if (result.data.stdout) {
-          setOutput(result.data.stdout);
+      if (response.data.output) {
+        setOutput(response.data.output);
+        if (response.data.status.id === 3) {
           toast.success('Code executed successfully');
-        } else if (result.data.stderr) {
-          setError(result.data.stderr);
-          toast.error('Code execution failed');
-        } else if (result.data.compile_output) {
-          setError(result.data.compile_output);
-          toast.error('Compilation failed');
         }
       }
+      
+      if (response.data.error) {
+        setError(response.data.error);
+        toast.error('Code execution failed');
+      }
+
     } catch (error) {
       console.error('Code execution error:', error);
       setError(error.response?.data?.error || 'Error executing code');
